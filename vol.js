@@ -27,8 +27,8 @@ class Vol {
             }
         }
 
-        this.dw = this.zeros_like();
-        this.length = this.w.length;
+        // this.dw = this.zeros_like(); -- save memory, allocmem at training
+        this.length = this.size;
     }
 
 
@@ -56,16 +56,17 @@ class Vol {
         var ix = ((this.sx * y) + x) * this.depth + d;
         this.dw[ix] += v; 
     }
-    max(limit=V.w.length) {
-        if (limit === V.w.length) 
-            return Math.max.apply(Math, V.w);
+    max(limit=this.size) {
+        if (limit === this.size) 
+            return Math.max.apply(Math, this.w);
             
-        var amax = V.w[0];
+        var amax = this.w[0];
         for(let i = 1; i < limit; i++) {
-            if(as[i] > amax) amax = as[i];
+            if(w[i] > amax) amax = w[i];
         }
         return amax;
     }
+    
     cloneAndZero() { return new Vol(this.sx, this.sy, this.depth, 0.0); } 
     clone() {
         var V = new Vol(this.sx, this.sy, this.depth, 0.0);

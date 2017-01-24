@@ -28,8 +28,9 @@ class Layer {
 
     compile(options) {
         // setup optimizers
-        this.updated.forEach(function(w) {
-            w.optimizer = get_optimizer(w.length, options);
+        this.updated.forEach(function(V) {
+            V.optimizer = get_optimizer(V.size, options);
+            V.dw = V.zeros_like();
         });
     }
 
