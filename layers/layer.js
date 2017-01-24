@@ -3,6 +3,7 @@ import {getopt} from 'util.js'
 
 class Layer {
     constructor(layer_type, opt={}) {
+        this.name = opt.name;
         // computed
         this.out_sx = opt.in_sx;
         this.out_sy = opt.in_sy;
