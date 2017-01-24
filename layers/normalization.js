@@ -1,4 +1,4 @@
-import Layer from 'layer'
+import {Layer} from 'layers/layer.js'
 
 class LocalResponseNormalizationLayer extends Layer {
 

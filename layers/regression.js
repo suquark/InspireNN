@@ -1,4 +1,4 @@
-import { OutputLayer } from 'layer'
+import { OutputLayer } from 'layers/layer.js'
 
 class RegressionLayer extends OutputLayer {
     // implements an L2 regression cost layer,

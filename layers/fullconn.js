@@ -1,6 +1,6 @@
-import { OutputLayer } from 'layer';
-import { Vol } from 'vol';
-import getopt from 'util';
+import { OutputLayer } from 'layers/layer.js';
+import { Vol } from 'vol.js';
+import {getopt} from 'util.js';
 
 class FullyConnLayer extends OutputLayer {
 
@@ -16,6 +16,7 @@ class FullyConnLayer extends OutputLayer {
 
         // initializations
         let bias = getopt(opt, 'bias_pref', 0.0);
+        this.num_inputs = opt.in_sx * opt.in_sy * opt.in_depth;
         this.filters = [];
         for (var i = 0; i < this.out_depth; i++) 
         { 

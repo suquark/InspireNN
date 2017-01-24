@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+
+<script src="transpiler/system.js"></script>
+<script>
+SystemJS.config({
+    map: {
+      'plugin-traceur': 'transpiler/plugin-traceur.js',
+      'traceur': 'transpiler/traceur.js',
+      'traceur-runtime': 'transpiler/traceur-runtime.js'
+    },
+    meta: {
+      'traceur': {
+        format: 'global',
+        exports: 'traceur',
+        scriptLoad: false
+      },
+      'traceur-runtime': {
+        format: 'global',
+        exports: '$traceurRuntime'
+      }
+    },
+    transpiler: 'plugin-traceur',
+    transpilerRuntime: false,
+    baseURL: '/'
+})
+
+
+
+  
+</script>
+
+
+<script type="text/javascript">
+  
+  SystemJS.import('convnet.js').then(function(convnet) {
+
+    var layer_defs, net;
+    layer_defs = [];
+    layer_defs.push({type:'input', out_sx:1, out_sy:1, out_depth:100});
+    layer_defs.push({type:'deconv', sx:6, filters:512, stride:1, pad:0, activation:'relu'});
+    layer_defs.push({type:'deconv', sx:4, filters:256, stride:2, pad:1, activation:'relu'});
+    layer_defs.push({type:'deconv', sx:4, filters:128, stride:2, pad:1, activation:'relu'});
+    layer_defs.push({type:'deconv', sx:4, filters:64, stride:2, pad:1, activation:'relu'});
+    layer_defs.push({type:'deconv', sx:4, filters:3, stride:2, pad:1});
+    
+    net = new convnet.Net();
+    net.makeLayers(layer_defs);
+
+  });
+
+</script>
+
+</head>
+<body>
+
+</body>
+</html>
+
+

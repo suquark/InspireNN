@@ -1,5 +1,5 @@
-import { zeros, indexOfMax } from 'convnet_util';
-import Layer from 'layer'
+import { indexOfMax } from 'util.js';
+import { Layer } from 'layers/layer.js'
 
 class ReluLayer extends Layer {
     // Implements ReLU nonlinearity elementwise
@@ -22,7 +22,7 @@ class ReluLayer extends Layer {
         var V = this.in_act; // we need to set dw of this
         var V2 = this.out_act;
         var N = V.length;
-        V.dw = zeros(N); // zero out gradient wrt data
+        V.dw.fill(0.); // zero out gradient wrt data
         for (var i = 0; i < N; i++) {
             V.dw[i] = V2.w[i] <= 0 ? 0 : V2.dw[i]; // threshold
         }
@@ -54,7 +54,7 @@ class SigmoidLayer extends Layer {
         var V = this.in_act; // we need to set dw of this
         var V2 = this.out_act;
         var N = V.length;
-        V.dw = zeros(N); // zero out gradient wrt data
+        V.dw.fill(0.); // zero out gradient wrt data
         for (let i = 0; i < N; i++) {
             let v2wi = V2.w[i];
             V.dw[i] =  v2wi * (1.0 - v2wi) * V2.dw[i];
@@ -85,7 +85,7 @@ class TanhLayer extends Layer {
         var V = this.in_act; // we need to set dw of this
         var V2 = this.out_act;
         var N = V.length;
-        V.dw = zeros(N); // zero out gradient wrt data
+        V.dw.fill(0.); // zero out gradient wrt data
         for (let i = 0; i < N; i++) {
             let v2wi = V2.w[i];
             V.dw[i] = (1.0 - v2wi * v2wi) * V2.dw[i];
@@ -163,7 +163,7 @@ class MaxoutLayer extends Layer {
         var V = this.in_act; // we need to set dw of this
         var V2 = this.out_act;
         var N = this.out_depth;
-        V.dw = global.zeros(V.w.length); // zero out gradient wrt data
+        V.dw.fill(0.); // zero out gradient wrt data
 
         // pass the gradient through the appropriate switch
         if(this.out_sx === 1 && this.out_sy === 1) {

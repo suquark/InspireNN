@@ -1,6 +1,6 @@
-import { Vol } from 'vol';
-import { assert, indexOfMax } from 'util';
-import { get_layer } from 'layers/layer_export'
+import { Vol } from 'vol.js';
+import { assert, indexOfMax } from 'util.js';
+import { get_layer } from 'layers/layer_export.js';
 
 // Net manages a set of layers
 // For now constraints: Simple linear order of layers, first layer input last layer a cost layer

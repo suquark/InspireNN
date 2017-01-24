@@ -1,5 +1,4 @@
-import { OutputLayer } from 'layer'
-import { zeros } from '../convnet_util'
+import { OutputLayer } from 'layers/layer.js';
 // Layers that implement a loss. Currently these are the layers that 
 // can initiate a backward() pass. In future we probably want a more 
 // flexible system that can accomodate multiple losses to do multi-task
@@ -45,7 +44,7 @@ class SoftmaxLayer extends OutputLayer {
     backward(y) {
         // compute and accumulate gradient wrt weights and bias of this layer
         let x = this.in_act;
-        x.dw = zeros(x.w.length); // zero out the gradient of input Vol
+        x.dw.fill(0.);  // zero out the gradient of input Vol
 
         for (let i = 0; i < this.out_depth; i++) {
             let indicator = i === y ? 1.0 : 0.0;

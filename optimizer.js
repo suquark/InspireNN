@@ -1,4 +1,4 @@
-import getopt from 'util';
+import {getopt} from 'util.js';
 const eps = 1e-8;
 
 // gsum: last iteration gradients (used for momentum calculations)

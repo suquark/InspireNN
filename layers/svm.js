@@ -1,5 +1,4 @@
-import { OutputLayer } from 'layer'
-import { zeros } from '../convnet_util'
+import { OutputLayer } from 'layers/layer.js'
 
 class SVMLayer extends OutputLayer {
     
@@ -8,7 +7,7 @@ class SVMLayer extends OutputLayer {
     backward(y) {
         // compute and accumulate gradient wrt weights and bias of this layer
         let x = this.in_act;
-        x.dw = zeros(x.w.length); // zero out the gradient of input Vol
+        x.dw.fill(0.); // zero out the gradient of input Vol
 
         // we're using structured loss here, which means that the score
         // of the ground truth should be higher than the score of any other 

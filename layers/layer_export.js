@@ -1,21 +1,23 @@
-import { InputLayer } from 'layers/layer';
-import { ReluLayer, SigmoidLayer, TanhLayer, MaxoutLayer } from 'layers/activation';
-import { PoolLayer } from 'layers/pool';
-import { SVMLayer } from 'layers/svm';
-import { SoftmaxLayer } from 'layers/softmax';
-import { RegressionLayer } from 'layers/regression';
-import { FullyConnLayer } from 'layers/fullconn';
-import { ConvLayer } from 'layers/conv';
-import { LocalResponseNormalizationLayer } from 'layers/normalization';
-import { DropoutLayer } from 'layers/dropout';
+import { InputLayer } from 'layers/layer.js';
+import { ReluLayer, SigmoidLayer, TanhLayer, MaxoutLayer } from 'layers/activation.js';
+import { PoolLayer } from 'layers/pool.js';
+import { SVMLayer } from 'layers/svm.js';
+import { SoftmaxLayer } from 'layers/softmax.js';
+import { RegressionLayer } from 'layers/regression.js';
+import { FullyConnLayer } from 'layers/fullconn.js';
+import { ConvLayer } from 'layers/conv.js';
+import { LocalResponseNormalizationLayer } from 'layers/normalization.js';
+import { DropoutLayer } from 'layers/dropout.js';
+import { DeconvLayer } from 'layers/deconv.js';
 
-layer_dict = {
+var layer_dict = {
     'input' : InputLayer,
     'relu' : ReluLayer,
     'sigmoid' : SigmoidLayer,
     'tanh' : TanhLayer,
     'dropout' : DropoutLayer,
     'conv' : ConvLayer,
+    'deconv' : DeconvLayer,
     'pool' : PoolLayer,
     'lrn'  : LocalResponseNormalizationLayer,
     'softmax' : SoftmaxLayer,

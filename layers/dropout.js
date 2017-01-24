@@ -1,5 +1,6 @@
+import {Layer} from 'layers/layer.js'
 
-class PoolLayer extends Layer {
+class DropoutLayer extends Layer {
     // An inefficient dropout layer
     // Note this is not most efficient implementation since the layer before
     // computed all these activations and now we're just going to drop them :(

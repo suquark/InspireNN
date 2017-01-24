@@ -1,4 +1,4 @@
-import { randn } from 'convnet_utils';
+import { randn } from 'util.js';
 
 class Vol {
     constructor(sx, sy, depth, c) {
@@ -16,8 +16,7 @@ class Vol {
         this.sy = sy;
         this.depth = depth;
         let n = this.sx * this.sy * this.depth;
-        this.dw = new Array(w.length).fill(0.);
-
+        
         if (Object.prototype.toString.call(sx) === '[object Array]') {
             this.w = arr.slice(); // copy content
         } else {
@@ -32,8 +31,8 @@ class Vol {
                 this.w = new Array(n).fill(c);
             }
         }
-
-        this.length = w.length;
+        this.dw = new Array(this.w.length).fill(0.);
+        this.length = this.w.length;
     }
 
     get(x, y, d) { 
@@ -102,8 +101,8 @@ class Vol {
         this.sy = json.sy;
         this.depth = json.depth;
         var n = this.sx*this.sy*this.depth;
-        this.w = global.zeros(n);
-        this.dw = global.zeros(n);
+        this.w = new Array(n).fill(0.);
+        this.dw = new Array(n).fill(0.);
         // copy over the elements.
         this.w[i] = json.w.slice();
         this.length = w.length;

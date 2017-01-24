@@ -1,6 +1,5 @@
-import { zeros } from 'convnet_util';
-import Layer from 'layer'
-import getopt from '../convnet_util'
+import {Layer} from 'layers/layer.js'
+import {getopt} from 'util.js'
 
 class PoolLayer extends Layer {
 

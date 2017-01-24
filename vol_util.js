@@ -1,4 +1,4 @@
-import { Vol } from 'convnet_vol';
+import { Vol } from 'vol.js';
 
 
 // Volume utilities

@@ -1,5 +1,5 @@
-import getopt from 'util'
-import Regularization from 'regularization'
+import getopt from 'util.js'
+import Regularization from 'regularization.js'
 
 
 class Trainer {
