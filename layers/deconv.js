@@ -1,5 +1,5 @@
 import { Layer } from 'layers/layer.js'
-import { Vol } from 'vol.js'
+import { Vol, createVector, createMatrix, getVolFromJSON } from 'vol.js';
 import {getopt} from 'util.js'
 
 var get_deconv_outsize = function(size, k, s, p) {
@@ -45,12 +45,8 @@ class DeconvLayer extends Layer {
       
         // initializations
         let bias = getopt(opt, 'bias_pref', 0.0);
-        this.filters = [];
-        for (var i = 0; i < this.out_depth; i++) 
-        { 
-            this.filters.push(new Vol(1, 1, this.in_depth)); 
-        }
-        this.biases = new Vol(1, 1, this.out_depth, bias);
+        this.filters = createMatrix(this.out_depth, this.in_depth);
+        this.biases = createVector(this.out_depth, bias);
 
         // record updated values for updating
         this.updated = this.filters.concat([this.biases]);
@@ -123,8 +119,8 @@ class DeconvLayer extends Layer {
         this.l1_decay_mul = getopt(json, 'l1_decay_mul', 0.0);
         this.l2_decay_mul = getopt(json, 'l2_decay_mul', 1.0);
         
-        this.filters = json.filters.map(x => new Vol(0,0,0,0).fromJSON(x));
-        this.biases = new Vol(0,0,0,0).fromJSON(json.biases);
+        this.filters = json.filters.map(getVolFromJSON);
+        this.biases = getVolFromJSON(json.biases);
     }
 
 }

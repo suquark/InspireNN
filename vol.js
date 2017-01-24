@@ -1,39 +1,36 @@
-import { randn } from 'util.js';
+import { get_norm_weights } from 'weights_init.js';
 
 class Vol {
     constructor(sx, sy, depth, c) {
         // this is how you check if a variable is an array. Oh, Javascript :)
         if(Object.prototype.toString.call(sx) === '[object Array]') {
-            var arr = sx;
+            this.w = sx.slice(); // copy content
             // we were given a list in sx, assume 1D volume and fill it up
             sx = 1;
             sy = 1;
-            depth = arr.length;
+            depth = this.w.length;
         }
         
         // we were given dimensions of the vol
         this.sx = sx;
         this.sy = sy;
         this.depth = depth;
-        let n = this.sx * this.sy * this.depth;
-        
-        if (Object.prototype.toString.call(sx) === '[object Array]') {
-            this.w = arr.slice(); // copy content
-        } else {
-            if(typeof c === 'undefined') {
-                // weight normalization is done to equalize the output
-                // variance of every neuron, otherwise neurons with a lot
-                // of incoming connections have outputs of larger variance
-                let scale = Math.sqrt(1.0 / (sx*sy*depth));
-                this.w = new Array(n).fill(0.);
-                for (let i = 0; i < n; i++) this.w[i] = randn(0.0, scale);
+
+        this.shape = [this.sx, this.sy, this.depth];
+        this.size = this.sx * this.sy * this.depth;
+ 
+        if (typeof this.w === 'undefined') {
+            if (typeof c === 'undefined') {
+                this.w = get_norm_weights(this.size);
             } else {
-                this.w = new Array(n).fill(c);
+                this.w = new Array(this.size).fill(c);
             }
         }
-        this.dw = new Array(this.w.length).fill(0.);
+
+        this.dw = this.zeros_like();
         this.length = this.w.length;
     }
+
 
     get(x, y, d) { 
         let ix = ((this.sx * y) + x) * this.depth + d;
@@ -44,20 +41,20 @@ class Vol {
         this.w[ix] = v;
     }
     add(x, y, d, v) { 
-      var ix = ((this.sx * y) + x) * this.depth + d;
-      this.w[ix] += v; 
+        var ix = ((this.sx * y) + x) * this.depth + d;
+        this.w[ix] += v; 
     }
     get_grad(x, y, d) { 
-      var ix = ((this.sx * y) + x) * this.depth + d;
-      return this.dw[ix]; 
+        var ix = ((this.sx * y) + x) * this.depth + d;
+        return this.dw[ix]; 
     }
     set_grad(x, y, d, v) { 
-      var ix = ((this.sx * y) + x) * this.depth + d;
-      this.dw[ix] = v; 
+        var ix = ((this.sx * y) + x) * this.depth + d;
+        this.dw[ix] = v; 
     }
     add_grad(x, y, d, v) { 
-      var ix = ((this.sx * y) + x) * this.depth + d;
-      this.dw[ix] += v; 
+        var ix = ((this.sx * y) + x) * this.depth + d;
+        this.dw[ix] += v; 
     }
     max(limit=V.w.length) {
         if (limit === V.w.length) 
@@ -77,7 +74,7 @@ class Vol {
         return V;
     }
     zeros_like() {
-        return new Array(w.length).fill(0.);
+        return new Array(this.size).fill(0.);
     }
     addFrom(V) { for(var k = 0; k < this.w.length; k++) { this.w[k] += V.w[k]; }}
     addFromScaled(V, a) { for(var k = 0; k < this.w.length; k++) { this.w[k] += a * V.w[k]; }}
@@ -104,11 +101,32 @@ class Vol {
         this.w = new Array(n).fill(0.);
         this.dw = new Array(n).fill(0.);
         // copy over the elements.
-        this.w[i] = json.w.slice();
-        this.length = w.length;
+        this.w = json.w.slice();
+        
+        this.shape = [this.sx, this.sy, this.depth];
+        this.size = this.sx * this.sy * this.depth;
+        this.length = this.size;
         // for map function
         return this;
     }
 }
 
-export { Vol };
+function createVector(depth, bias) {
+    // bias == undefined will cause initialize
+    return new Vol(1, 1, depth, bias);
+}
+
+function createMatrix(m, n) {
+    // m * n Matrix, m: output, n: input
+    let filters = [];
+    for (let i = 0; i < m; i++) {
+        filters.push(new Vol(1, 1, n));
+    }
+    return filters;
+}
+
+function getVolFromJSON(json) {
+    return new Vol(0, 0, 0, 0).fromJSON(json);
+}
+
+export { Vol, createVector, createMatrix, getVolFromJSON };
