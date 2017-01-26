@@ -1,3 +1,5 @@
+import { getopt } from 'util.js';
+
 
 // syntactic sugar function for getting default parameter values
 function getopt(opt, field_name, default_value) {
@@ -43,21 +45,39 @@ function load_opt(self, opt) {
         });
     });
 
+}
+
+class migrate {
+    constructor (target, opt) {
+        this.target = target;
+        this.opt = opt;
+    }
+
+    move (field_name, default_value) {
+        this.target[field_name] = getopt(this.opt, field_name, default_value);
+    }
+}
 
 
+function _arrayBufferToBase64( buffer ) {
+    var binary = '';
+    var bytes = new Uint8Array( buffer );
+    var len = bytes.byteLength;
+    for (var i = 0; i < len; i++) {
+        binary += String.fromCharCode( bytes[ i ] );
+    }
+    return window.btoa( binary );
+}
+
+function Float32Array2Buffer(arr) {
+    var buffer = new ArrayBuffer(4 * arr.length);
+    var floatView = new Float32Array(buffer);
+    for (let i = 0; i < arr.length; i++) {
+        floatView[i] = arr[i];
+    }
+    return buffer;
 }
 
 export {
-    randf,
-    randi,
-    randn,
-    zeros,
-    maxmin,
-    randperm,
-    weightedSample,
-    arrUnique,
-    arrContains,
-    getopt,
-    assert,
-    indexOfMax
+    migrate
 };

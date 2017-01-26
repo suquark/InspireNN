@@ -13,7 +13,7 @@ class RegressionLayer extends OutputLayer {
     backward(y) { 
         // compute and accumulate gradient wrt weights and bias of this layer
         var x = this.in_act;
-        x.dw = global.zeros(x.w.length); // zero out the gradient of input Vol
+        x.dw.fill(0); // zero out the gradient of input Vol
         var loss = 0.0;
         if (y instanceof Array || y instanceof Float64Array) {
             for(var i = 0; i < this.out_depth; i++) {

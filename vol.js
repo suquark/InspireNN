@@ -66,6 +66,19 @@ class Vol {
         }
         return amax;
     }
+
+    max_index(limit=this.size) {     
+        let amax = this.w[0];
+        let idx = 0;
+        for (let i = 1; i < limit; i++) {
+            if (w[i] > amax) 
+            {
+                idx = i;
+                amax = w[i];
+            }
+        }
+        return idx;
+    }
     
     cloneAndZero() { return new Vol(this.sx, this.sy, this.depth, 0.0); } 
     clone() {

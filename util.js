@@ -66,6 +66,26 @@ var randperm = function(n) {
   return array;
 }
 
+function sample(a) {
+    return a[randi(0, a.length)];
+}
+
+function random_replace(a, v) {
+    a[randi(0, a.length)] = v;
+}
+
+function sample_from_dist(probs) {
+    var p = randf(0, 1.0);
+    var cumprob = 0.0;
+    for (let i in probs) {
+        cumprob += probs[k];
+        if (p < cumprob) {
+            return k;
+        }
+    }
+    return probs.length - 1;
+}
+
 // sample from list lst according to probabilities in list probs
 // the two lists are of same size, and probs adds up to 1
 var weightedSample = function(lst, probs) {
@@ -105,10 +125,62 @@ function assert(condition, message) {
     }
 }
 
+function one_hot(n, k, value=1) {
+    let a = new Array(n).fill(0);
+    a[k] = value;
+    return a;
+}
+
 function indexOfMax(arr) {
     return reduce((iMax, x, i, arr) => x > arr[iMax] ? i : iMax, 0);
 }
 
-export {randf, randi, randn, 
-  zeros, maxmin, randperm, weightedSample, arrUnique, arrContains, getopt, assert
-, indexOfMax};
+function clip(ori, floor, ceil) {
+    let v = ori;
+    if (v < floor) v = floor;
+    if (v > ceil) v = ceil;
+    return v;
+}
+
+function normalize_angle(angle) {
+    let nangle = angle % (Math.PI * 2);
+    if (nangle < 0) nangle += 2 * Math.PI;
+    return nangle;
+}
+
+class AvgWindow {
+    // a window stores _size_ number of values
+    // and returns averages. Useful for keeping running
+    // track of validation or training accuracy during SGD
+    constructor(size, minsize) {
+        this.v = [];
+        this.size = typeof(size)==='undefined' ? 100 : size;
+        this.minsize = typeof(minsize)==='undefined' ? 20 : minsize;
+        this.sum = 0;
+    }
+    add(x) {
+        this.v.push(x);
+        this.sum += x;
+        if(this.v.length>this.size) {
+            var xold = this.v.shift();
+            this.sum -= xold;
+        }
+    }
+    get_average() {
+        if(this.v.length < this.minsize) return -1;
+        else return this.sum/this.v.length;
+    }
+    reset(x) {
+        this.v = [];
+        this.sum = 0;
+    }
+}
+
+
+export {
+    randf, randi, randn, 
+    zeros, maxmin, randperm, arrUnique, arrContains, 
+    getopt, assert,
+    indexOfMax, weightedSample, sample_from_dist, random_replace, sample,
+    one_hot, clip, AvgWindow
+};
