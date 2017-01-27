@@ -43,12 +43,12 @@ class Trainer {
                 let p = pg.params, g = pg.grads;
                 let batch_grad = this.regular.get_punish(p, pg.l2_decay_mul, pg.l1_decay_loss);
                 // make raw batch gradient
-                for (let i = 0; i < p.length; i++) {
+                for (let i in p) {
                     batch_grad[i] = (batch_grad[i] + g[i]) / this.batch_size; 
                 }
                 let update = pg.optimizer.grad(batch_grad);
                 // perform an update for all sets of weights
-                for (let i = 0; i < p.length; i++) p[i] += update[i];
+                for (let i in p) p[i] += update[i];
             }
         }
 

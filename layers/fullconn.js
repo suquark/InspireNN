@@ -17,9 +17,9 @@ class FullyConnLayer extends OutputLayer {
         // initializations
         this.num_inputs = opt.in_sx * opt.in_sy * opt.in_depth;
         let bias = getopt(opt, 'bias_pref', 0.0);
+        
         this.filters = createMatrix(this.out_depth, this.num_inputs);
         this.biases = createVector(this.out_depth, bias);
-
         // record updated values for updating
         this.updated = this.filters.concat([this.biases]);
     }
@@ -77,6 +77,8 @@ class FullyConnLayer extends OutputLayer {
         
         this.filters = json.filters.map(getVolFromJSON);
         this.biases = getVolFromJSON(json.biases);
+        // record updated values for updating
+        this.updated = this.filters.concat([this.biases]);
     }
 }
 

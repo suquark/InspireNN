@@ -1,5 +1,33 @@
 import { Vol, Net, Trainer, DQN, World, Agent } from 'convnet.js';
 
+// Load JSON text from server hosted file and return JSON parsed object
+function loadJSON(filePath) {
+  // Load json file;
+  var json = loadTextFileAjaxSync(filePath, "application/json");
+  // Parse json
+  return JSON.parse(json);
+}   
+
+// Load text with Ajax synchronously: takes path to file and optional MIME type
+function loadTextFileAjaxSync(filePath, mimeType)
+{
+  var xmlhttp=new XMLHttpRequest();
+  xmlhttp.open("GET",filePath,false);
+  if (mimeType != null) {
+    if (xmlhttp.overrideMimeType) {
+      xmlhttp.overrideMimeType(mimeType);
+    }
+  }
+  xmlhttp.send();
+  if (xmlhttp.status==200)
+  {
+    return xmlhttp.responseText;
+  }
+  else {
+    // TODO Throw exception
+    return null;
+  }
+}
 
 function create_world(H, W) {
     var num_inputs = 27; // 9 eyes, each sees 3 numbers (wall, green, red thing proximity)
@@ -19,17 +47,24 @@ function create_world(H, W) {
     var net = new Net();
     net.makeLayers(layer_defs);
 
+    net.fromJSON(loadJSON("RL/helper/saving.json"));
+
+    // $.getJSON("RL/helper/saving.json", function(json) {
+    //     net.fromJSON(json);
+    //     stoplearn();
+    //     goveryfast();
+    // }); 
 
     // options for the Temporal Difference learner that trains the above net
     // by backpropping the temporal difference learning rule.
-    // var tdtrainer_options = {learning_rate:0.02, momentum:0.0, 
-    //     batch_size:64, l2_decay:0.01,
-    // method: 'adam'};
 
-    var tdtrainer_options = {batch_size:64, l2_decay:0.01, method: 'adam'};
+
+    var tdtrainer_options = {learning_rate:0.001, momentum:0.0, batch_size:64, l2_decay:0.05};
+
+    // var tdtrainer_options = { batch_size:64, l2_decay:0.01, method: 'adam' };
+
 
     var tdtrainer = new Trainer(net, tdtrainer_options);
-
 
     var dqn_options = {
         temporal_window: temporal_window,

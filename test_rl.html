@@ -13,7 +13,7 @@
 
 
 
-<script src="transpiler/system.js"></script>
+<script src="/transpiler/system.js"></script>
 <script>
 SystemJS.config({
     map: {
@@ -125,16 +125,17 @@ function start() {
     }
     canvas = document.getElementById("canvas");
     w = create_world(canvas.width, canvas.height);
-    //stoplearn();
-    //goslow();
-    startlearn();
-    goveryfast();
+    stoplearn();
+    // goslow();
+    // startlearn();
+    gofast();
 
-    $.getJSON("RL/helper/saving.json", function(json) {
-        w.agent.brain.value_net.fromJSON(json);
-        stoplearn();
-        gonormal();
-    }); 
+    // $.getJSON("RL/helper/saving.json", function(json) {
+    //     w.agent.brain.value_net.fromJSON(json);
+    //     stoplearn();
+    //     goveryfast();
+    // }); 
+
 }
 
 function loadfile() {
@@ -142,12 +143,8 @@ function loadfile() {
     stoplearn(); // also stop learning
     gonormal();
 }
-
-
-
   
 start();
-
  
 </script>
 

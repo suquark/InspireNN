@@ -16,7 +16,7 @@ class Regularization {
         var l1_decay = this.l1_decay * l1_decay_mul;
 
         // using map will too slow for closure, etc ...
-        var lgrad = new Array(plist);
+        var lgrad = new Array(plist.length);
         for (let i in plist) {
             let p = plist[i];
             this.l2_decay_loss += l2_decay * p * p / 2; // accumulate weight decay loss

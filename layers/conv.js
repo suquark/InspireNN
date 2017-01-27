@@ -147,6 +147,8 @@ class ConvLayer extends Layer {
 
         this.filters = json.filters.map(getVolFromJSON);
         this.biases = getVolFromJSON(json.biases);
+        // record updated values for updating
+        this.updated = this.filters.concat([this.biases]);
     }
 
 }

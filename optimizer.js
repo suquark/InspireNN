@@ -23,7 +23,7 @@ class Adam {
             this.xsum[j] = this.xsum[j] * this.beta2 + (1 - this.beta2) * g[j] * g[j]; // update biased second moment estimate
             let biasCorr1 = this.gsum[j] * (1 - Math.pow(this.beta1, this.k)); // correct bias first moment estimate
             let biasCorr2 = this.xsum[j] * (1 - Math.pow(this.beta2, this.k)); // correct bias second moment estimate
-            dx[j] =  -this.learning_rate * biasCorr1 / (Math.sqrt(biasCorr2) + this.eps);
+            dx[j] =  -this.learning_rate * biasCorr1 / (Math.sqrt(biasCorr2) + eps);
         }
         return dx;
     }
@@ -41,7 +41,7 @@ class Adagrad {
         let dx = new Array(g.length);
         for (let j = 0; j < g.length; j++) {
             this.gsum[j] += g[j] * g[j];
-            dx[j] = - this.learning_rate / Math.sqrt(gsum[j] + this.eps) * g;
+            dx[j] = - this.learning_rate / Math.sqrt(gsum[j] + eps) * g;
         }
         return dx;
     }
@@ -61,9 +61,9 @@ class Windowgrad {
         // adagrad update 
         let dx = new Array(g.length);
         for (let j = 0; j < g.length; j++) {
-            gsum[j] = this.ro * gsum[j] + (1 - this.ro) * g[j] * g[j];
+            this.gsum[j] = this.ro * this.gsum[j] + (1 - this.ro) * g[j] * g[j];
             // eps added for better conditioning
-            dx[j] = - this.learning_rate / Math.sqrt(gsum[j] + this.eps) * g[j];
+            dx[j] = - this.learning_rate / Math.sqrt(this.gsum[j] + eps) * g[j];
         }
         return dx;
     }
@@ -82,9 +82,9 @@ class Adadelta {
         let dx = new Array(g.length);
         for (let j = 0; j < g.length; j++) {
             let gij = g[j];
-            gsum[j] = this.ro * gsum[j] + (1-this.ro) * gij * gij;
-            dx[j] = - Math.sqrt((xsum[j] + this.eps)/(gsum[j] + this.eps)) * gij;
-            xsum[j] = this.ro * xsum[j] + (1-this.ro) * dx[j] * dx[j]; // yes, xsum lags behind gsum by 1.
+            this.gsum[j] = this.ro * this.gsum[j] + (1 - this.ro) * gij * gij;
+            dx[j] = - Math.sqrt((this.xsum[j] + eps) / (this.gsum[j] + eps)) * gij;
+            this.xsum[j] = this.ro * this.xsum[j] + (1 - this.ro) * dx[j] * dx[j]; // yes, xsum lags behind gsum by 1.
         }
         return dx;
     }
@@ -104,8 +104,8 @@ class Nesterov {
         for (let j = 0; j < g.length; j++) {
             let gij = g[j];
             let d = gsumi[j];
-            gsumi[j] = gsumi[j] * this.momentum + this.learning_rate * gij;
-            dx[j] = this.momentum * d - (1.0 + this.momentum) * gsumi[j];
+            this.gsumi[j] = this.gsumi[j] * this.momentum + this.learning_rate * gij;
+            dx[j] = this.momentum * d - (1.0 + this.momentum) * this.gsumi[j];
         }
         return dx;
     }
@@ -125,8 +125,8 @@ class SGD {
         if (this.momentum > 0.0) {
             for (let j = 0; j < g.length; j++) {
                 // momentum update
-                dx[j] = this.momentum * gsumi[j] - this.learning_rate * g[j]; // step
-                gsumi[j] = dx[j]; // back this up for next iteration of momentum
+                dx[j] = this.momentum * this.gsumi[j] - this.learning_rate * g[j]; // step
+                this.gsumi[j] = dx[j]; // back this up for next iteration of momentum
             }
         } else {
             // vanilla sgd
