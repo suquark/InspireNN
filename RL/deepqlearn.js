@@ -135,11 +135,12 @@ class DQN {
         var n = this.window_size;
         for (let k = 0; k < this.temporal_window; k++) {
             let state = this.state_window[n - 1 - k];
+            let action = this.action_window[n - 1 - k];
             // state
             w = w.concat(state);
             // action, encoded as 1-of-k indicator vector. We scale it up a bit because
             // we dont want weight regularization to undervalue this information, as it only exists once
-            let action1ofk = one_hot(this.num_actions, state, 1.0 * this.num_states);
+            let action1ofk = one_hot(this.num_actions, action, 1.0 * this.num_states);
             w = w.concat(action1ofk);
         }
         return w;

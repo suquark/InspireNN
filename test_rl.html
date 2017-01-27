@@ -130,7 +130,7 @@ function start() {
     startlearn();
     goveryfast();
 
-    $.getJSON("RL/helper/saving2.json", function(json) {
+    $.getJSON("RL/helper/saving.json", function(json) {
         w.agent.brain.value_net.fromJSON(json);
         stoplearn();
         gonormal();
