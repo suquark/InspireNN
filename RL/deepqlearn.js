@@ -9,6 +9,8 @@ import {
     AvgWindow
 } from 'util.js';
 
+import { Vol } from 'vol.js';
+
 import { migrate } from 'conf.js';
 
 import { Net } from 'topology/vallia.js';
@@ -78,7 +80,7 @@ class DQN {
         this.tdtrainer = tdtrainer;
         // create [state -> value of all possible actions] modeling net for the value function
         this.value_net = this.tdtrainer.net;
-        net_checker(this.value_net);
+        this.net_checker(this.value_net);
 
         // // and finally we need a Temporal Difference Learning trainer!
         // let tdtrainer_options = {
@@ -121,7 +123,7 @@ class DQN {
         // and return the argmax action and its value
         let action_values = this.value_net.forward(new Vol(s));
         let maxk = action_values.max_index();
-        return { action: maxk, value: action_values[maxk] };
+        return { action: maxk, value: action_values.w[maxk] };
     }
 
     getNetInput(xt) {
@@ -230,6 +232,28 @@ class DQN {
             this.average_loss_window.add(avcost);
         }
     }
+
+    net_checker(net) {
+        // this is an advanced usage feature, because size of the input to the network, and number of
+        // actions must check out. This is not very pretty Object Oriented programming but I can't see
+        // a way out of it :(
+        let layer_defs = net.layers;
+        if (layer_defs.length < 2) {
+            console.warn('TROUBLE! must have at least 2 layers');
+        }
+        if (layer_defs[0].layer_type !== 'input') {
+            console.warn('TROUBLE! first layer must be input layer!');
+        }
+        if (layer_defs[layer_defs.length - 1].layer_type !== 'regression') {
+            console.warn('TROUBLE! last layer must be input regression!');
+        }
+        if (layer_defs[0].out_depth * layer_defs[0].out_sx * layer_defs[0].out_sy !== this.net_inputs) {
+            console.warn('TROUBLE! Number of inputs must be num_states * temporal_window + num_actions * temporal_window + num_states!');
+        }
+        if (layer_defs[layer_defs.length - 1].out_size !== this.num_actions) {
+            console.warn('TROUBLE! Number of regression neurons should be num_actions!');
+        }
+    }
 }
 
 function visState(brain, node) {
@@ -251,27 +275,7 @@ function visState(brain, node) {
     elt.appendChild(brainvis);
 }
 
-function net_checker(net) {
-    // this is an advanced usage feature, because size of the input to the network, and number of
-        // actions must check out. This is not very pretty Object Oriented programming but I can't see
-        // a way out of it :(
-        layer_defs = net.layers;
-        if (layer_defs.length < 2) {
-            console.warn('TROUBLE! must have at least 2 layers');
-        }
-        if (layer_defs[0].layer_type !== 'input') {
-            console.warn('TROUBLE! first layer must be input layer!');
-        }
-        if (layer_defs[layer_defs.length - 1].layer_type !== 'regression') {
-            console.warn('TROUBLE! last layer must be input regression!');
-        }
-        if (layer_defs[0].out_depth * layer_defs[0].out_sx * layer_defs[0].out_sy !== this.net_inputs) {
-            console.warn('TROUBLE! Number of inputs must be num_states * temporal_window + num_actions * temporal_window + num_states!');
-        }
-        // if (layer_defs[layer_defs.length - 1].num_neurons !== this.num_actions) {
-        //     console.warn('TROUBLE! Number of regression neurons should be num_actions!');
-        // }
-}
+
 
 function dist_checker(a) {
     var s = 0.0;

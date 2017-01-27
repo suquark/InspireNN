@@ -54,13 +54,13 @@ class Walls {
         let minres = false;
         for (let i in this.walls) {
             var wall = this.walls[i];
-            var result = l.intersect(wall.line);  // line_intersect(p1, p2, wall.p1, wall.p2);
+            var result = l.intersect_line(wall.line);  // line_intersect(p1, p2, wall.p1, wall.p2);
             if (result) {
                 result.type = wall.type; // 0 is wall
-                if (!minres) { minres = res; }
-                else if(res.ua < minres.ua) { // check if its closer
+                if (!minres) { minres = result; }
+                else if(result.ua < minres.ua) { // check if its closer
                     // if yes replace it
-                    minres = res;
+                    minres = result;
                 }
             }
         }
@@ -71,10 +71,10 @@ class Walls {
     cross(s, d) {
         // closest intersect with walls
         // not very efficient, you can splitting the space to make it better
-        let l = new Line(s.x, s.y, d.x, s.y);
+        let l = new Line(s.x, s.y, d.x, d.y);
         for (let i in this.walls) {
             var wall = this.walls[i];
-            if (l.intersect(wall.line)) return true;
+            if (l.intersect_line(wall.line)) return true;
         }
         return false;
     }

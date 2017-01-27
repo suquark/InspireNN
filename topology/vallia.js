@@ -135,7 +135,10 @@ class Net {
 
     fromJSON(json) {
         // NOTE: .fromJSON(Lj) returns undefined, so we take the risk of using JSON as opts
-        this.layers = json.layers.map(Lj => get_layer(Lj));
+
+        for (let i in this.layers) {
+            this.layers[i].fromJSON(json.layers[i])
+        }
     }
   
     outputLayer() { return this.layers[this.layers.length - 1]; }

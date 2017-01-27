@@ -1,4 +1,4 @@
-import { Line, Face } from '../geometry.js';
+import { Line, Face, Vec } from '../geometry.js';
 
 class SingleEye {
     // Eye sensor has a maximum range and senses walls
@@ -21,7 +21,7 @@ class SingleEye {
 
     interact(judger) {
         let result = judger(this.line_of_sight);
-        this.receive(judger);
+        this.receive(result);
     }
 
     receive(result) {
@@ -29,8 +29,8 @@ class SingleEye {
             this.sensed_proximity = result.up.dist_from(this.face.origin);
             this.sensed_type = result.type;
         } else {
-            e.sensed_proximity = this.max_range;
-            e.sensed_type = -1;
+            this.sensed_proximity = this.max_range;
+            this.sensed_type = -1;
         }
     }
 
@@ -72,26 +72,37 @@ class MultiEyes {
     constructor(face) {
         this.eyes = [];
         this.face = face;
+        this.face = face;
     }
 
     setup_array(start, step, num) {
         // create eye array
         for (let k = 0; k < num; k++) {
-            this.eyes.push(new Eye(start + k * step, this.face));
+            this.eyes.push(new SingleEye(start + k * step, this.face));
         }
+    }
+
+    set face(f) {
+        this._face = f;
+        for (let i in this.eyes) {
+            this.eyes[i].face = this._face; // for consistence..., may use reference later?
+        }
+    }
+
+    get face() {
+        return this._face;
     }
 
     interact(judger) {
         for (let i in this.eyes) {
-            this.eyes.interact(judger);
+            this.eyes[i].interact(judger);
         }
     }
 
-    get signal() {
+    signal() {
         var input_array = new Array(this.eyes.length * 3);
         for (let i in this.eyes) {
-            var e = this.eyes[i];
-            let sig = e.signal;
+            let sig = this.eyes[i].signal();
             input_array[i * 3] = sig[0];
             input_array[i * 3 + 1] = sig[1];
             input_array[i * 3 + 2] = sig[2];
@@ -117,4 +128,4 @@ class MultiEyes {
     }
 }
 
-export { Eye };
+export { MultiEyes };

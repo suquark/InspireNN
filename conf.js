@@ -1,24 +1,6 @@
 import { getopt } from 'util.js';
 
 
-// syntactic sugar function for getting default parameter values
-function getopt(opt, field_name, default_value) {
-    if (typeof field_name === 'string') {
-        // case of single string
-        return (typeof opt[field_name] !== 'undefined') ? opt[field_name] : default_value;
-    } else {
-        // assume we are given a list of string instead
-        var ret = default_value;
-        for (var i = 0; i < field_name.length; i++) {
-            var f = field_name[i];
-            if (typeof opt[f] !== 'undefined') {
-                ret = opt[f]; // overwrite return value
-            }
-        }
-        return ret;
-    }
-}
-
 function load_opt(self, opt) {
 
     // required is a list of string

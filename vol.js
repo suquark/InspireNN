@@ -27,10 +27,9 @@ class Vol {
             }
         }
 
-        // this.dw = this.zeros_like(); -- save memory, allocmem at training
+        this.dw = this.zeros_like();  // -- save memory, allocmem at training?
         this.length = this.size;
     }
-
 
     get(x, y, d) { 
         let ix = ((this.sx * y) + x) * this.depth + d;
@@ -71,10 +70,10 @@ class Vol {
         let amax = this.w[0];
         let idx = 0;
         for (let i = 1; i < limit; i++) {
-            if (w[i] > amax) 
+            if (this.w[i] > amax) 
             {
                 idx = i;
-                amax = w[i];
+                amax = this.w[i];
             }
         }
         return idx;
@@ -114,8 +113,17 @@ class Vol {
         var n = this.sx*this.sy*this.depth;
         this.w = new Array(n).fill(0.);
         this.dw = new Array(n).fill(0.);
-        // copy over the elements.
-        this.w = json.w.slice();
+
+        if (json.w instanceof Array) {
+            // copy over the elements.
+            this.w = json.w.slice();
+        } else {
+            this.w = new Array(json.w.length);
+            for (let i in json.w) {
+                this.w[i] = json.w[i];
+            }
+        }
+            
         
         this.shape = [this.sx, this.sy, this.depth];
         this.size = this.sx * this.sy * this.depth;

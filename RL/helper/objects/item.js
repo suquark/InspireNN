@@ -13,6 +13,11 @@ class Item {
         this.age = 0;
         this.alive = true;
     }
+
+    get position() {
+        return this.circle.c;
+    }
+
 }
 
 class ItemLifetime {
@@ -29,19 +34,22 @@ class ItemLifetime {
     }
     
     recycle() {
-        if (someone_dead) {
+        if (this.someone_dead) {
             this.items = this.items.filter(x => x.alive);
         }
     }
 
     kill(item) {
-        item.alive = false;
-        this.someone_dead = true;
+        if (typeof item !== 'undefined')
+        {
+            item.alive = false;
+            this.someone_dead = true;
+        }
     }
 
     dead() {
         for (let i in this.items) {
-            if (this.items[i] > 5000 && randf(0, 1) < 0.1) {
+            if (this.items[i].age > 5000 && randf(0, 1) < 0.1) {
                 // replace this one, has been around too long
                 this.kill(this.items[i]);
             }
@@ -68,14 +76,14 @@ class ItemLifetime {
         this.items.push(it);
     }
 
-    draw() {
+    draw(ctx) {
         // draw items
         ctx.strokeStyle = "rgb(0, 0, 0)";
         for(let i in this.items) {
             let it = this.items[i];
             if (it.type === 1) ctx.fillStyle = "rgb(255, 150, 150)";
             if (it.type === 2) ctx.fillStyle = "rgb(150, 255, 150)";
-            this.circle.draw(ctx);
+            it.circle.draw(ctx);
         }
     }
 
@@ -86,13 +94,13 @@ class ItemLifetime {
         for (let i in this.items) {
             var item = this.items[i];
             // javascript is fine for this
-            var result = this.circle.intersect(l);  // line_point_intersect(p1, p2, it.p, it.rad);
+            var result = item.circle.intersect_line(l);  // line_point_intersect(p1, p2, it.p, it.rad);
             if (result) {
-                result.type = this.type; // 0 is wall
-                if (!minres) { minres = res; }
-                else if(res.ua < minres.ua) { // check if its closer
+                result.type = item.type; // 0 is wall
+                if (!minres) { minres = result; }
+                else if(result.ua < minres.ua) { // check if its closer
                     // if yes replace it
-                    minres = res;
+                    minres = result;
                 }
             }
         }
@@ -101,10 +109,6 @@ class ItemLifetime {
 
     hit(circ) {
         return this.items.filter(it => circ.intersect_circle(it.circle));
-    }
-
-    get position() {
-        return this.circle.a;
     }
 
 }

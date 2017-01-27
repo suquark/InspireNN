@@ -34,13 +34,26 @@ class Layer {
         });
     }
 
+   
+  
+    
     forward(V, is_training) {
+        /*
+            this.in_act = V;
+            this.out_act = f(V);
+            return this.out_act;
+        */
         this.in_act = V;
         this.out_act = V; // nothing to do, output raw scores
         return V;
     }
 
-    backward() { }
+    backward() { 
+        /*
+            this.in_act.grad = f(V, this.out_act);
+            this.grad = g(this.w, this.out_act);
+        */
+    }
 
     toJSON() {
         var json = {};
@@ -58,6 +71,10 @@ class Layer {
         this.out_sy = json.out_sy;
         this.layer_type = json.layer_type;
         this.serialize.forEach(key => this[key] = json[key])
+    }
+
+    get out_size() {
+        return this.out_sx * this.out_sy * this.out_depth;
     }
 
     createOutput() {

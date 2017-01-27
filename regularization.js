@@ -1,5 +1,3 @@
-
-
 class Regularization {
     
     constructor (l2_decay = 0., l1_decay = 0.) { 
@@ -16,13 +14,19 @@ class Regularization {
         // learning rate for some parameters.
         var l2_decay = this.l2_decay * l2_decay_mul;
         var l1_decay = this.l1_decay * l1_decay_mul;
-        // may map will not be too slow ...
-        return plist.map(function(p) {
-            l2_decay_loss += l2_decay * p * p / 2; // accumulate weight decay loss
-            l1_decay_loss += l1_decay * Math.abs(p);
-            var l1grad = l1_decay * (p > 0 ? 1 : -1);
-            var l2grad = l2_decay * (p);
-            return l2grad + l1grad;
-        });
+
+        // using map will too slow for closure, etc ...
+        var lgrad = new Array(plist);
+        for (let i in plist) {
+            let p = plist[i];
+            this.l2_decay_loss += l2_decay * p * p / 2; // accumulate weight decay loss
+            this.l1_decay_loss += l1_decay * Math.abs(p);
+            let l1grad = l1_decay * (p > 0 ? 1 : -1);
+            let l2grad = l2_decay * (p);
+            lgrad[i] = l2grad + l1grad;
+        }
+        return lgrad;
     }
 }
+
+export { Regularization };

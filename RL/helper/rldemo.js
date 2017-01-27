@@ -61,7 +61,7 @@ function goslow() {
 }
 
 function savenet() {
-    var j = w.agents[0].brain.value_net.toJSON();
+    var j = w.agent.brain.value_net.toJSON();
     var t = JSON.stringify(j);
     document.getElementById('tt').value = t;
 }
@@ -69,7 +69,7 @@ function savenet() {
 function loadnet() {
     var t = document.getElementById('tt').value;
     var j = JSON.parse(t);
-    w.agents.brain.value_net.fromJSON(j);
+    w.agent.brain.value_net.fromJSON(j);
     stoplearn(); // also stop learning
     gonormal();
 }
@@ -94,10 +94,7 @@ var canvas;
 function start() {
     canvas = document.getElementById("canvas");
     
-    w = new World();
-
-    // problems -- no brain?
-    w.agent = new Agent();
+    w = create_world(canvas.width, canvas.height);
     
     gofast();
 }

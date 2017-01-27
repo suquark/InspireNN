@@ -1,3 +1,4 @@
+import { clip } from 'util.js';
 import { Face } from './geometry.js';
 import { Digestion } from './sensors/digestion.js';
 import { MultiEyes } from './sensors/naive_eye.js';
@@ -17,8 +18,7 @@ class Agent {
         // 9 eyes
         this.eyes.setup_array(-0.75, 0.25, 9);
         this.digest = new Digestion(
-            { 'type': {1: 5.0, 2: -6.0} }, 
-            { 'alive': false }
+            { 'type': {1: 5.0, 2: -6.0} }
         );
         // braaain
         //this.brain = new deepqlearn.Brain(this.eyes.length * 3, this.actions.length);
@@ -28,6 +28,8 @@ class Agent {
         this.brain = brain;  // maybe nothing
         this.reward_bonus = 0.0;
         this.prevactionix = -1;
+
+        this.old_face = this.face.clone(); 
     }
 
     get position() { return this.face.origin; }
@@ -90,14 +92,20 @@ class Agent {
         ctx.strokeStyle = "rgb(0,0,0)";
     
         // draw agents body
+        //this.old_face.draw(ctx);
         this.face.draw(ctx);
     }
 
     draw(ctx) {
+        // We have to draw old state, terrible...
         this.draw_body(ctx);
         // draw agents sight
-        this.eyes.draw();
+        this.eyes.face = this.old_face;
+        this.eyes.draw(ctx);
+        this.eyes.face = this.face;  // restore
+        //this.eyes.draw(ctx);
     }
 
 }
 
+export { Agent };

@@ -182,5 +182,5 @@ export {
     zeros, maxmin, randperm, arrUnique, arrContains, 
     getopt, assert,
     indexOfMax, weightedSample, sample_from_dist, random_replace, sample,
-    one_hot, clip, AvgWindow
+    one_hot, clip, normalize_angle, AvgWindow
 };

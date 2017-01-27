@@ -17,7 +17,7 @@ class Adam {
 
     grad(g) {
         ++this.k;
-        let dx = new Array(len);
+        let dx = new Array(g.length);
         for (let j = 0; j < g.length; j++) {
             this.gsum[j] = this.gsum[j] * this.beta1 + (1 - this.beta1) * g[j]; // update biased first moment estimate
             this.xsum[j] = this.xsum[j] * this.beta2 + (1 - this.beta2) * g[j] * g[j]; // update biased second moment estimate
@@ -38,7 +38,7 @@ class Adagrad {
 
     grad(g) {
         // adagrad update 
-        let dx = new Array(len);
+        let dx = new Array(g.length);
         for (let j = 0; j < g.length; j++) {
             this.gsum[j] += g[j] * g[j];
             dx[j] = - this.learning_rate / Math.sqrt(gsum[j] + this.eps) * g;
@@ -59,7 +59,7 @@ class Windowgrad {
 
     grad(g) {
         // adagrad update 
-        let dx = new Array(len);
+        let dx = new Array(g.length);
         for (let j = 0; j < g.length; j++) {
             gsum[j] = this.ro * gsum[j] + (1 - this.ro) * g[j] * g[j];
             // eps added for better conditioning
@@ -79,7 +79,7 @@ class Adadelta {
 
     grad(g) {
         // adagrad update 
-        let dx = new Array(len);
+        let dx = new Array(g.length);
         for (let j = 0; j < g.length; j++) {
             let gij = g[j];
             gsum[j] = this.ro * gsum[j] + (1-this.ro) * gij * gij;
@@ -100,7 +100,7 @@ class Nesterov {
 
     grad(g) {
         // adagrad update 
-        let dx = new Array(len);
+        let dx = new Array(g.length);
         for (let j = 0; j < g.length; j++) {
             let gij = g[j];
             let d = gsumi[j];
@@ -121,7 +121,7 @@ class SGD {
 
     grad(g) {
         // adagrad update 
-        let dx = new Array(len);
+        let dx = new Array(g.length);
         if (this.momentum > 0.0) {
             for (let j = 0; j < g.length; j++) {
                 // momentum update

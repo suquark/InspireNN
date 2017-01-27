@@ -1,5 +1,5 @@
 import { normalize_angle } from 'util.js';
-import { Face } from '../geometry.js';
+import { Face, Vec } from '../geometry.js';
 
 class TwoWheelMotor {
 
@@ -31,10 +31,11 @@ class TwoWheelMotor {
 
         var np = w2p.add(vv);
         var np2 = w1p.add(vv2);
-        let npos = np.add(np2).scale(0.5);
+        let npos = np.add(np2);
+        npos.scale(0.5);
         
         let nangle = normalize_angle(angle - rot1 + rot2);
-        return new Face(npos.x, npos.y, rad, nangle);
+        return new Face(npos.x, npos.y, face.rad, nangle);
     }
 }
 
