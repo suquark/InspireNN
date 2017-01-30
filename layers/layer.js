@@ -1,5 +1,5 @@
-import {get_optimizer} from 'optimizer.js';
-import {getopt} from 'util.js'
+import get_optimizer from 'optimizer/index.js';  // the default function
+import { getopt } from 'util.js'
 
 class Layer {
     constructor(layer_type, opt={}) {
