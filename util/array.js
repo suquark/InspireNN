@@ -15,26 +15,39 @@ function zeros(n) {
     }
 }
 
+/**
+ * utility that returns 2d array filled with 0
+ */
 function zeros2d(n, d) {
-    return array2d(n, d, 0.);
+    var x = [];
+    for (let i = 0; i < n; i++) {
+        x.push(zeros(d));
+    }
+    return x;
 }
 
-// utility that returns 2d array filled with value s
+/**
+ * utility that returns 2d array filled with value s
+ */
 function array2d(n, d, s) {
     var x = [];
     for (let i = 0; i < n; i++) {
-        x.push(new Array(d).fill(s));
+        x.push(zeros(d).fill(s));
     }
     return x;
 };
 
+/**
+ * Create one-hot array
+ * @param { int } n - length of array
+ * @param { int } k - array[k] fill value
+ * @param { number } value - fill array[k] with value
+ */
 function one_hot(n, k, value=1) {
-    let a = new Array(n).fill(0);
+    let a = zeros(n);
     a[k] = value;
     return a;
 }
-
-
 
 function arrContains(arr, elt) {
     return arr.includes(elt);
@@ -52,20 +65,20 @@ function maxmin(w) {
     var maxi = 0;
     var mini = 0;
     var n = w.length;
-    for(var i=1;i<n;i++) {
-      if(w[i] > maxv) { maxv = w[i]; maxi = i; } 
-      if(w[i] < minv) { minv = w[i]; mini = i; } 
+    for (var i = 1; i < n; i++) {
+        if(w[i] > maxv) { maxv = w[i]; maxi = i; } 
+        if(w[i] < minv) { minv = w[i]; mini = i; } 
     }
     return {maxi: maxi, maxv: maxv, mini: mini, minv: minv, dv:maxv-minv};
 }
-
-
 
 function indexOfMax(arr) {
     return reduce((iMax, x, i, arr) => x > arr[iMax] ? i : iMax, 0);
 }
 
-// compute L1 distance between two vectors
+/**
+ *  compute L1 distance between two vectors
+ */
 function L1(x1, x2) {
     let d = 0;
     let N = x1.length;  // important! length of array not of object!
@@ -75,7 +88,9 @@ function L1(x1, x2) {
     return d;
 }
 
-// compute L2 distance between two vectors
+/**
+ *  compute L2 square distance between two vectors
+ */
 function L2(x1, x2) {
     let d = 0;
     let N = x1.length;  // important! length of array not of object!
@@ -86,17 +101,20 @@ function L2(x1, x2) {
     return d;
 }
 
-// Euclidean distance.
+/**
+ *  compute Euclidean distance between two vectors
+ */
 function distance(x1, x2) {
     return Math.sqrt(L2(x1, x2));
 }
 
-
-function adj_matrix_L2(X) {
+/**
+ *  compute adjacent matrix with L2 square distance
+ */
+function adjMatrixL2(X) {
     // compute L2 pairwise distance in all vectors in X
     let N = X.length;
-    let dist = [];
-    for (let i = 0; i < N; i++) dist.push(zeros(N));
+    let dist = zeros2d(N, N);
     for (let i = 0; i < N; i++) {
         for (let j = i + 1; j < N; j++) {
             let d = L2(X[i], X[j]);
@@ -106,11 +124,13 @@ function adj_matrix_L2(X) {
     return dist;
 }
 
-function adj_matrix_distance(X) {
-    // compute L2 pairwise distance in all vectors in X
+/**
+ *  compute adjacent matrix with Euclidean distance
+ */
+function adjMatrixDistance(X) {
+    // compute Euclidean pairwise distance in all vectors in X
     let N = X.length;
-    let dist = [];    
-    for (let i = 0; i < N; i++) dist.push(zeros(N));
+    let dist = zeros2d(N, N);
     for (let i = 0; i < N; i++) {
         for (let j = i + 1; j < N; j++) {
             let d = distance(X[i], X[j]);
@@ -120,7 +140,27 @@ function adj_matrix_distance(X) {
     return dist;
 }
 
-function center_points(arr) {
+/**
+ *  compute adjacent matrix with Euclidean distance
+ */
+function adjMatrixDistanceBy(X, attr) {
+    // compute Euclidean pairwise distance in all vectors in X
+    let N = X.length;
+    let dist = zeros2d(N, N);
+    for (let i = 0; i < N; i++) {
+        for (let j = i + 1; j < N; j++) {
+            let d = distance(X[i][attr], X[j][attr]);
+            dist[i][j] = dist[j][i] = d;
+        }
+    }
+    return dist;
+}
+
+
+/**
+ * center points
+ */
+function centerPoints(arr) {
     let N = arr.length;
     let dim = arr[0].length;
 
@@ -146,4 +186,4 @@ export { zeros, zeros2d, array2d, one_hot };
 // property of array
 export { maxmin, indexOfMax, arrUnique, arrContains };
 // geometry
-export { L1, L2, distance, adj_matrix_L2, adj_matrix_distance, center_points };
+export { L1, L2, distance, adjMatrixL2, adjMatrixDistance, adjMatrixDistanceBy, centerPoints };

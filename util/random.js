@@ -3,6 +3,9 @@
  */
 
 // return 0 mean unit standard deviation random number
+/**
+ * the polar form of the Box-Muller transformation
+ */
 var return_v = false;
 var v_val = 0.0;
 function gaussRandom() {

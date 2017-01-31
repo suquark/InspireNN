@@ -19,7 +19,7 @@ class Adagrad extends grad_optimizer {
         let lr = this.learning_rate;
         for (let j = 0; j < g.length; j++) {
             w[j] += g[j] * g[j];
-            x[j] = - lr / Math.sqrt(w[j] + eps) * g;
+            x[j] = - lr / Math.sqrt(w[j] + eps) * g[j];
         }
     }
 }

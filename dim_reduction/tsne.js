@@ -24,7 +24,7 @@
 
 import { getopt, assert } from 'util.js';
 import { randn, randn2d } from 'util/random.js';
-import { zeros, array2d, zeros2d, center_points, L2, adj_matrix_L2 } from 'util/array.js';
+import { zeros, array2d, zeros2d, centerPoints, L2, adjMatrixDistance } from 'util/array.js';
 import { entropy, norm_dist } from 'util/prob.js';
 import { numeric_bsearch_decent } from 'util/numeric.js';
 import { Adam, SpecialSGD } from 'optimizer/index.js';  // you can drop `index.js` if supported 
@@ -48,7 +48,7 @@ class tSNE {
         var D = X[0].length;
         assert(N > 0, ' X is empty? You must have some data!');
         assert(D > 0, ' X[0] is empty? Where is the data?');
-        var dists = adj_matrix_L2(X); // convert X to distances using gaussian kernel
+        var dists = adjMatrixDistance(X); // convert X to distances using gaussian kernel
         this.initDataDist(dists);
     }
 
@@ -57,7 +57,7 @@ class tSNE {
     // D is assumed to be provided as an array of size N^2.
     initDataDist(D) {
         var N = D.length;
-        this.P = this.distance_gaussian(D, this.perplexity, 1e-4); // attach to object
+        this.P = this.distanceGaussian(D, this.perplexity, 1e-4); // attach to object
         this.N = N;  // back up the size of the dataset
         this.initSolution(); // refresh this
     }
@@ -69,9 +69,6 @@ class tSNE {
         for (let i in this.Y) {
             this.Y[i].optimizer = new SpecialSGD(this.Y[i].length, { learning_rate: this.epsilon });
         }
-        this.gains = array2d(this.N, this.dim, 1.0); // step gains
-                                // to accelerate progress in unchanging directions
-        this.ystep = zeros2d(this.N, this.dim); // momentum accumulator
         this.iter = 0;
         this.Qu = zeros2d(this.N, this.N); // t-distribution
     }
@@ -79,13 +76,21 @@ class tSNE {
     // return pointer to current solution
     get solution() { return this.Y; }
 
-        /**
+    gaussianKernel(X, Y, beta) {
+        let N = X.length;
+        for (let i = 0; i < N; i++) {
+            let x = X[i];
+            Y[i] = Math.exp(- x * x * beta);
+        }
+    }
+
+    /**
      * 
      *   Compute (p_{i|j} + p_{j|i})/(2n) from adj-matrix
      * 
      *   perplexity(P) = 2^H(P), the effective neighbor counts
      */
-     distance_gaussian(D, perplexity, tol) {
+    distanceGaussian(D, perplexity, tol) {
 
         assert(D.length === D[0].length, 'D should have square number of elements.');
         let N = D.length;
@@ -97,14 +102,11 @@ class tSNE {
             let drow = D[i];
             // perform binary search to find a suitable precision beta
             // so that the entropy of the distribution is appropriate
+            // if entropy was too high (distribution too diffuse) =>
+            // we need to increase the precision for more peaky distribution
             numeric_bsearch_decent(beta => {
-                // if entropy was too high (distribution too diffuse) =>
-                // we need to increase the precision for more peaky distribution
-
                 // compute kernel row with beta precision (beta = 0.5/sigma^2)
-                for (let j = 0; j < N; j++) {
-                    prow[j] = Math.exp(- drow[j] * beta);
-                }
+                this.gaussianKernel(drow, prow, beta);
                 prow[i] = 0.0; // we dont care about diagonals. It should be zero
                 // normalize p
                 norm_dist(prow);
@@ -209,7 +211,7 @@ class tSNE {
         }
 
         // reproject Y to be zero mean
-        center_points(this.Y);
+        centerPoints(this.Y);
 
         return cost; // return current cost
     }
@@ -260,12 +262,10 @@ class tSNE {
         var cost = 0.0;
         var grad = [];
         // we need to optimize it heavily ...
-
         var pmul = this.iter < 100 ? 4 : 1; // trick that helps with local optima
 
-
-        for (var i = 0; i < N; i++) {
-            var gsum = zeros(dim); // init grad for point i
+        for (let i = 0; i < N; i++) {
+            var gradi = zeros(dim); // init grad for point i
             let Pi = P[i];
             let Yi = Y[i];
             for (var j = 0; j < N; j++) {
@@ -280,10 +280,10 @@ class tSNE {
                 
                 for (let d = 0; d < dim; d++) {
                     // derivative of KL
-                    gsum[d] += 4 * (pmul * Pij - Qij) * Quij * (Yi[d] - Yj[d]);
+                    gradi[d] += 4 * (pmul * Pij - Qij) * Quij * (Yi[d] - Yj[d]);
                 }
             }
-            grad.push(gsum);
+            grad.push(gradi);
         }
 
         return { cost: cost, grad: grad };
@@ -293,15 +293,15 @@ class tSNE {
      * a much faster version
      */
     grad(Y) {
-        "use asm";
+        // "use asm";
         var N = this.N;
         var dim = this.dim; // dim of output space
         var P = this.P;
 
         let qsum = 0.0;
-        if (dim == 2) qsum = +this.distance_t2d(Y); 
-        else if (dim == 3) qsum = +this.distance_t3d(Y); 
-        else qsum = +this.distance_t(Y);
+        if (dim == 2) qsum = this.distance_t2d(Y); 
+        else if (dim == 3) qsum = this.distance_t3d(Y); 
+        else qsum = this.distance_t(Y);
 
         let Qu = this.Qu;
 
@@ -310,82 +310,26 @@ class tSNE {
 
         var pmul = this.iter < 100 ? 4 : 1; // trick that helps with local optima
 
-        if (dim == 2) {
-            let gbuf = zeros(2 * N);
-            if (this.iter < 100) {
-                for (var i = 0; i < N; i++) {
-                    let Pi = P[i];
-                    let Yi = Y[i];
-                    let Qi = Qu[i];
-                    for (var j = 0; j < N; j++) {
-                        let Pij = +Pi[j];
-                        let Quij = +Qi[j];
-                        let Yj = Y[j];
-                        let prefix = + 4 * (4 * Pij - Quij / qsum) * Quij;
-                        gbuf[i << 1] += prefix * (Yi[0] - Yj[0]);
-                        gbuf[(i << 1) + 1] += prefix * (Yi[1] - Yj[1]);
-                    }
-                }
-            } else {
-                for (var i = 0; i < N; i++) {
-                    let Pi = P[i];
-                    let Yi = Y[i];
-                    let Qi = Qu[i];
-                    for (var j = 0; j < N; j++) {
-                        let Pij = +Pi[j];
-                        let Quij = +Qi[j];
-                        let Yj = Y[j];
-                        let prefix = + 4 * (Pij - Quij / qsum) * Quij;
-                        gbuf[i << 1] += prefix * (Yi[0] - Yj[0]);
-                        gbuf[(i << 1) + 1] += prefix * (Yi[1] - Yj[1]);
-                    }
+        for (var i = 0; i < N; i++) {
+            var gsum = zeros(dim); // init grad for point i
+            let Pi = P[i];
+            let Yi = Y[i];
+            let Qi = Qu[i];
+            for (var j = 0; j < N; j++) {
+                let Pij = +Pi[j];
+                let Quij = +Qi[j];
+                let Yj = Y[j];
+                let prefix = + 4 * (pmul * Pij - Quij / qsum) * Quij;
+                for (let d = 0; d < dim; d++) {
+                    // derivative of KL
+                    gsum[d] += prefix * (Yi[d] - Yj[d]);
                 }
             }
-            for (var i = 0; i < N; i++) {
-                grad.push([gbuf[i << 1], gbuf[(i << 1) + 1]]);
-            }
-            
-
-        } else if (dim == 3) {
-            for (var i = 0; i < N; i++) {
-                var gsum = zeros(dim); // init grad for point i
-                let Pi = P[i];
-                let Yi = Y[i];
-                let Qi = Qu[i];
-                for (var j = 0; j < N; j++) {
-                    let Pij = +Pi[j];
-                    let Quij = +Qi[j];
-                    let Yj = Y[j];
-                    let prefix = + 4 * (pmul * Pij - Quij / qsum) * Quij;
-                    gsum[0] += prefix * (Yi[0] - Yj[0]);
-                    gsum[1] += prefix * (Yi[1] - Yj[1]);
-                    gsum[2] += prefix * (Yi[2] - Yj[2]);
-                }
-                grad.push(gsum);
-            }
-        } else {
-            for (var i = 0; i < N; i++) {
-                var gsum = zeros(dim); // init grad for point i
-                let Pi = P[i];
-                let Yi = Y[i];
-                let Qi = Qu[i];
-                for (var j = 0; j < N; j++) {
-                    let Pij = +Pi[j];
-                    let Quij = +Qi[j];
-                    let Yj = Y[j];
-                    let prefix = + 4 * (pmul * Pij - Quij / qsum) * Quij;
-                    for (let d = 0; d < dim; d++) {
-                        // derivative of KL
-                        gsum[d] += prefix * (Yi[d] - Yj[d]);
-                    }
-                }
-                grad.push(gsum);
-            }
+            grad.push(gsum);
         }
-
+       
         return { cost: 0.0, grad: grad };
     }
-
 
 }
 
