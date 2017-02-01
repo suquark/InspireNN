@@ -1,21 +1,23 @@
 /**
- * Sammon Mapping
+ * Force field
  */
 
-import { getopt, assert } from 'util.js';
+import { getopt } from 'util.js';
 import { assertArray2D } from 'util/assert.js';
 import { randn2d } from 'util/random.js';
-import { centerPoints, zeros2d, adjMatrixDistance, distance } from 'util/array.js';
+import { centerPoints, zeros2d, adjMatrixDistance, distance, L2 } from 'util/array.js';
 import { Adam } from 'optimizer/index.js';  // you can drop `index.js` if supported 
 
 /**
  * @param {?Object} opt Options.
  * @constructor
  */
-class SammonMapping {
+class ForceField {
     constructor(opt={}) {
         this.dim = getopt(opt, 'dim', 2); // by default 2-D
         this.epsilon = getopt(opt, 'epsilon', 1); // learning rate
+        this.nn = getopt(opt, 'nn', 3); // nested neighbors
+        
         this.iter = 0;
     }
 
@@ -84,9 +86,7 @@ class SammonMapping {
         let grad = zeros2d(N, dim);
         for (let i = 0; i < N; i++) {
             for (let j = i + 1; j < N; j++) {
-                let Dij = D[i][j];
-                let dij = distance(Y[i], Y[j]);
-                let k = 2.0 * (dij - Dij) / (dij * Dij + 1e-8);
+                let k = -1.0 / L2(Y[i], Y[j]);
                 for (let d = 0; d < dim; d++) {
                     let dx = Y[i][d] - Y[j][d];
                     grad[i][d] += k * dx;
@@ -94,7 +94,9 @@ class SammonMapping {
                 }
             }
         }
+
         // calc cost
+        let sum = 0.
         let cost = 0.;
         if (calc_cost) {
             let sum = 0.;  // normalize sum
@@ -104,24 +106,45 @@ class SammonMapping {
                     let dij = distance(Y[i], Y[j]);
                     sum += Dij;
                     let Dd = Dij - dij;
-                    cost += (Dd * Dd) / (Dij + 1e-8);
+                    cost += 1 / (dij + 1e-8) + 0.5 * (Dd * Dd);
                 }
             }
-            cost /= sum; 
+             
         }
 
-        // let gmax = 0.;
-        // for (let i = 0; i < N; i++) {
-        //     for (let d = 0; d < dim; d++) {
-        //         gmax = Math.max(grad[i][d], gmax);
-        //     }
-        // }
-        // console.log(gmax + ', ' + cost);
-       
-        return { grad: grad, cost: cost };
+        /////////////////
+
+        if (this.nn <= 0) {  // then calc all pairs
+            
+            for (let i = 0; i < N; i++) {
+                for (let j = i + 1; j < N; j++) {
+                    let Dij = D[i][j];
+                    let dij = distance(Y[i], Y[j]);
+                    let k = (dij - Dij) / (dij + 1e-8);
+                    for (let d = 0; d < dim; d++) {
+                        let dx = Y[i][d] - Y[j][d];
+                        grad[i][d] += k * dx;
+                        grad[j][d] -= k * dx;
+                    }
+                }
+            }
+
+            if (calc_cost) {
+                for (let i = 0; i < N; i++) {
+                    for (let j = i + 1; j < N; j++) {
+                        let Dij = D[i][j];
+                        let dij = distance(Y[i], Y[j]);
+                        let Dd = Dij - dij;
+                        cost += 0.5 * (Dd * Dd);
+                    }
+                }
+            }
+        } else {  // calc knn edges
+
+        }
+
+        return { grad: grad, cost: cost / sum };
     }
-
-
 }
 
-export { SammonMapping };
+export { ForceField };

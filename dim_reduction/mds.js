@@ -1,5 +1,5 @@
 /**
- * Sammon Mapping
+ * Multidimensional scaling
  */
 
 import { getopt, assert } from 'util.js';
@@ -9,10 +9,11 @@ import { centerPoints, zeros2d, adjMatrixDistance, distance } from 'util/array.j
 import { Adam } from 'optimizer/index.js';  // you can drop `index.js` if supported 
 
 /**
+ * Multidimensional scaling
  * @param {?Object} opt Options.
  * @constructor
  */
-class SammonMapping {
+class MDS {
     constructor(opt={}) {
         this.dim = getopt(opt, 'dim', 2); // by default 2-D
         this.epsilon = getopt(opt, 'epsilon', 1); // learning rate
@@ -73,7 +74,7 @@ class SammonMapping {
     /** 
      * return cost and gradient, given an arrangement
      * 
-     * E = \frac{1}{\sum\limits_{i<j}d^{*}_{ij}}\sum_{i<j}\frac{(d^{*}_{ij}-d_{ij})^2}{d^{*}_{ij}}.
+     * E = \frac{1}{\sum\limits_{i<j}d^{*}_{ij}}\sum_{i<j}(d^{*}_{ij}-d_{ij})^2.
      * 
      * 
      */
@@ -84,14 +85,16 @@ class SammonMapping {
         let grad = zeros2d(N, dim);
         for (let i = 0; i < N; i++) {
             for (let j = i + 1; j < N; j++) {
-                let Dij = D[i][j];
-                let dij = distance(Y[i], Y[j]);
-                let k = 2.0 * (dij - Dij) / (dij * Dij + 1e-8);
-                for (let d = 0; d < dim; d++) {
-                    let dx = Y[i][d] - Y[j][d];
-                    grad[i][d] += k * dx;
-                    grad[j][d] -= k * dx;
-                }
+                //if ( i!= j ){
+                    let Dij = D[i][j];
+                    let dij = distance(Y[i], Y[j]);
+                    let k = 2.0 * (dij - Dij) / (dij + 1e-8);
+                    for (let d = 0; d < dim; d++) {
+                        let dx = Y[i][d] - Y[j][d];
+                        grad[i][d] += k * dx;
+                        grad[j][d] -= k * dx;
+                    }
+               // }
             }
         }
         // calc cost
@@ -104,24 +107,15 @@ class SammonMapping {
                     let dij = distance(Y[i], Y[j]);
                     sum += Dij;
                     let Dd = Dij - dij;
-                    cost += (Dd * Dd) / (Dij + 1e-8);
+                    cost += Dd * Dd;
                 }
             }
             cost /= sum; 
         }
-
-        // let gmax = 0.;
-        // for (let i = 0; i < N; i++) {
-        //     for (let d = 0; d < dim; d++) {
-        //         gmax = Math.max(grad[i][d], gmax);
-        //     }
-        // }
-        // console.log(gmax + ', ' + cost);
-       
         return { grad: grad, cost: cost };
     }
 
 
 }
 
-export { SammonMapping };
+export { MDS };

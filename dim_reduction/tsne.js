@@ -22,7 +22,8 @@
  * THE SOFTWARE.
  */
 
-import { getopt, assert } from 'util.js';
+import { getopt } from 'util.js';
+import { assertArray2D, assertSquare } from 'util/assert.js';
 import { randn, randn2d } from 'util/random.js';
 import { zeros, array2d, zeros2d, centerPoints, L2, adjMatrixDistance } from 'util/array.js';
 import { entropy, norm_dist } from 'util/prob.js';
@@ -44,10 +45,8 @@ class tSNE {
     // this function takes a set of high-dimensional points
     // and creates matrix P from them using gaussian kernel
     initDataRaw(X) {
-        var N = X.length;
-        var D = X[0].length;
-        assert(N > 0, ' X is empty? You must have some data!');
-        assert(D > 0, ' X[0] is empty? Where is the data?');
+   
+        assertArray2D(X);
         var dists = adjMatrixDistance(X); // convert X to distances using gaussian kernel
         this.initDataDist(dists);
     }
@@ -91,9 +90,7 @@ class tSNE {
      *   perplexity(P) = 2^H(P), the effective neighbor counts
      */
     distanceGaussian(D, perplexity, tol) {
-
-        assert(D.length === D[0].length, 'D should have square number of elements.');
-        let N = D.length;
+        let N = assertSquare(D);
         var Htarget = Math.log(perplexity); // target entropy of distribution
         var P = zeros2d(N, N); // temporary probability matrix
 

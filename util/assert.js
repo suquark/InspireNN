@@ -27,8 +27,8 @@ function assertSquare(array) {
 }
 
 function assertArray2D(array) {
-    assert(!checkClass(array, 'Array'), 'The object should be an array');
-    assert(!checkClass(array[0], 'Array'), 'The object should be an array of array');
+    assert(checkClass(array, 'Array'), 'The object should be an array');
+    assert(checkClass(array[0], 'Array'), 'The object should be an array of array');
     return [array.length, array[0].length];
 }
 
