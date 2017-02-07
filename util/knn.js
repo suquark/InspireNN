@@ -30,8 +30,4 @@ function naive_knn(A, K) {
     return result;
 }
 
-export {
-    norm_dist,
-    norm_dist2d,
-    entropy
-};
+export { naive_knn };

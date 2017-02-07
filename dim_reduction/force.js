@@ -3,11 +3,11 @@
  */
 
 import { getopt } from 'util.js';
-import { assertArray2D } from 'util/assert.js';
+import { assertArray2D, assert } from 'util/assert.js';
 import { randn2d } from 'util/random.js';
 import { centerPoints, zeros2d, adjMatrixDistance, distance, L2 } from 'util/array.js';
 import { Adam } from 'optimizer/index.js';  // you can drop `index.js` if supported 
-
+import { naive_knn } from 'util/knn.js';
 /**
  * @param {?Object} opt Options.
  * @constructor
@@ -17,7 +17,6 @@ class ForceField {
         this.dim = getopt(opt, 'dim', 2); // by default 2-D
         this.epsilon = getopt(opt, 'epsilon', 1); // learning rate
         this.nn = getopt(opt, 'nn', 3); // nested neighbors
-        
         this.iter = 0;
     }
 
@@ -29,13 +28,15 @@ class ForceField {
         this.initDataDist(dists);
     }
 
-    // this function takes a fattened distance matrix and creates
-    // matrix P from them.
     // D is assumed to be provided as an array of size N^2.
     initDataDist(D) {
         var N = D.length;
         this.D = D;
         this.N = N;  // back up the size of the dataset
+        if (this.nn > 0) {
+            assert(this.N - 1 >= this.nn, "Error: K-NN need at least N + 1 points");
+            this.A = naive_knn(D, this.nn);
+        }
         this.initSolution(); // refresh this
     }
 
@@ -50,6 +51,18 @@ class ForceField {
 
     // return pointer to current solution
     get solution() { return this.Y; }
+
+    get edges() {
+        let edges = [];
+        let A = this.A;
+        let n = A.length;
+        for (let i = 0; i < n; i++) {
+            for (let j = 0; j < A[i].length; j++) {
+                edges.push([i, A[i][j]]);
+            }
+        }
+        return edges;
+    }
 
 
     // perform a single step of optimization to improve the embedding
@@ -86,7 +99,7 @@ class ForceField {
         let grad = zeros2d(N, dim);
         for (let i = 0; i < N; i++) {
             for (let j = i + 1; j < N; j++) {
-                let k = -1.0 / L2(Y[i], Y[j]);
+                let k = -1.0 / (L2(Y[i], Y[j]) + 1e-8);
                 for (let d = 0; d < dim; d++) {
                     let dx = Y[i][d] - Y[j][d];
                     grad[i][d] += k * dx;
@@ -96,17 +109,15 @@ class ForceField {
         }
 
         // calc cost
-        let sum = 0.
+        let sum = 0. // normalize sum
         let cost = 0.;
         if (calc_cost) {
-            let sum = 0.;  // normalize sum
             for (let i = 0; i < N; i++) {
                 for (let j = i + 1; j < N; j++) {
                     let Dij = D[i][j];
+                    sum += Dij * Dij;                    
                     let dij = distance(Y[i], Y[j]);
-                    sum += Dij;
-                    let Dd = Dij - dij;
-                    cost += 1 / (dij + 1e-8) + 0.5 * (Dd * Dd);
+                    cost += 1 / (dij + 1e-8);
                 }
             }
              
@@ -139,10 +150,35 @@ class ForceField {
                     }
                 }
             }
-        } else {  // calc knn edges
+        } else {  // calc knn edges, note: the cost become Dij irrelative
+            let A = this.A;
+            for (let i = 0; i < N; i++) {
+                for (let e in A[i]) {
+                    let j = A[i][e];
+                    let dij = distance(Y[i], Y[j]);
+                    //let k = (dij - Dij) / (dij + 1e-8);
+                    //let k = 10 * (dij - 1);
+                    let k = 10 * (dij - 1); // k = 5, length = 1
+                    for (let d = 0; d < dim; d++) {
+                        let dx = Y[i][d] - Y[j][d];
+                        grad[i][d] += k * dx;
+                        grad[j][d] -= k * dx;
+                    }
+                }
+            }
+
+
+            if (calc_cost) {
+                for (let i = 0; i < N; i++) {
+                    for (let e in A[i]) {
+                        let j = A[i][e];
+                        cost += 0.5 * L2(Y[i], Y[j]);
+                    }
+                }
+            }
+
 
         }
-
         return { grad: grad, cost: cost / sum };
     }
 }

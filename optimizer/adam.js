@@ -35,8 +35,8 @@ class Adam extends grad_optimizer {
          * initialization bias correction terms, 
          * which offset some of the instability that initializing v and w to 0 can create.
          */
-        let alpha1 = 1 - Math.pow(beta1, k);
-        let alpha2 = 1 - Math.pow(beta2, k);
+        let alpha1 = 1.0 - Math.pow(beta1, k);
+        let alpha2 = 1.0 - Math.pow(beta2, k);
         
         for (let j = 0; j < g.length; j++) {
             v[j] = beta1 * v[j] + (1 - beta1) * g[j]; // update biased first moment estimate

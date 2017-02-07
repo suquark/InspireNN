@@ -60,6 +60,8 @@ class MDS {
         let cost = cg.cost;
         let grad = cg.grad;
 
+        //console.log('grad:' + grad);
+
         // perform gradient step
         for (let i = 0; i < N; i++) {
             this.Y[i].optimizer.update(this.Y[i], grad[i]);
@@ -105,7 +107,7 @@ class MDS {
                 for (let j = i + 1; j < N; j++) {
                     let Dij = D[i][j];
                     let dij = distance(Y[i], Y[j]);
-                    sum += Dij;
+                    sum += Dij * Dij;
                     let Dd = Dij - dij;
                     cost += Dd * Dd;
                 }
