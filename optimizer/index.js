@@ -29,7 +29,8 @@ var optimizers = {
     'rmsprop': RMSProp,
     'adadelta': Adadelta,
     'nesterov': Nesterov,
-    'sgd': SGD
+    'sgd': SGD,
+    'specialsgd': SpecialSGD
 };
 
 export default function (size, opt) {

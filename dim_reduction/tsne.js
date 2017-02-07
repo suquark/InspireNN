@@ -1,79 +1,35 @@
-/** @license
- * Modified form Andrej Karpathy's work.
- * Here's the origin license:
- * 
- * The MIT License (MIT)
- * Copyright (c) 2015 Andrej Karpathy
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
-
 import { getopt } from 'util.js';
-import { assertArray2D, assertSquare } from 'util/assert.js';
-import { randn, randn2d } from 'util/random.js';
-import { zeros, array2d, zeros2d, centerPoints, L2, adjMatrixDistance } from 'util/array.js';
+import { assertSquare } from 'util/assert.js';
+import { zeros2d, L2 } from 'util/array.js';
 import { entropy, norm_dist } from 'util/prob.js';
 import { numeric_bsearch_decent } from 'util/numeric.js';
-import { Adam, SpecialSGD } from 'optimizer/index.js';  // you can drop `index.js` if supported 
+import { DimReductionBase } from 'dim_reduction/base.js';
 
 /**
  * @param {?Object} opt Options.
  * @constructor
  */
-class tSNE {
+class tSNE extends DimReductionBase {
     constructor(opt={}) {
+        super(opt);
         this.perplexity = getopt(opt, 'perplexity', 30);
-        this.dim = getopt(opt, 'dim', 2); // by default 2-D tSNE
-        this.epsilon = getopt(opt, 'epsilon', 10); // learning rate
-        this.iter = 0;
-    }
-
-    // this function takes a set of high-dimensional points
-    // and creates matrix P from them using gaussian kernel
-    initDataRaw(X) {
-   
-        assertArray2D(X);
-        var dists = adjMatrixDistance(X); // convert X to distances using gaussian kernel
-        this.initDataDist(dists);
+        this.optimizer = 'specialsgd';
     }
 
     // this function takes a fattened distance matrix and creates
     // matrix P from them.
     // D is assumed to be provided as an array of size N^2.
     initDataDist(D) {
-        var N = D.length;
-        this.P = this.distanceGaussian(D, this.perplexity, 1e-4); // attach to object
-        this.N = N;  // back up the size of the dataset
-        this.initSolution(); // refresh this
+        super.initDataDist(D);
+        // convert input distance into probability
+        this.P = this.distanceGaussian(D, this.perplexity, 1e-4);        
     }
 
     // (re)initializes the solution to random
     initSolution() {
-        // generate random solution to t-SNE
-        this.Y = randn2d(this.N, this.dim, 0.0, 1e-4); // the solution
-        for (let i in this.Y) {
-            this.Y[i].optimizer = new SpecialSGD(this.Y[i].length, { learning_rate: this.epsilon });
-        }
-        this.iter = 0;
+        super.initSolution();
         this.Qu = zeros2d(this.N, this.N); // t-distribution
     }
-
-    // return pointer to current solution
-    get solution() { return this.Y; }
 
     gaussianKernel(X, Y, beta) {
         let N = X.length;
@@ -120,7 +76,6 @@ class tSNE {
                 Pout[i][j] = Math.max((P[i][j] + P[j][i]) / (N * 2), 1e-100);
             }
         }
-
         return Pout;
     }
 
@@ -193,141 +148,53 @@ class tSNE {
         return qsum;
     }
 
-    // perform a single step of optimization to improve the embedding
-    step(calc_cost = true) {
-        this.iter += 1;
-        let N = this.N;
-
-        let cg = this.costGrad(this.Y, calc_cost); // evaluate gradient
-        let cost = cg.cost;
-        let grad = cg.grad;
-
-        // perform gradient step
-        for (let i = 0; i < N; i++) {
-            this.Y[i].optimizer.update(this.Y[i], grad[i]);
-        }
-
-        // reproject Y to be zero mean
-        centerPoints(this.Y);
-
-        return cost; // return current cost
-    }
-
-    // for debugging: gradient check
-    debugGrad() {
-        var N = this.N;
-
-        var cg = this.costGrad(this.Y); // evaluate gradient
-        var cost = cg.cost;
-        var grad = cg.grad;
-
-        var e = 1e-5;
-        for (var i = 0; i < N; i++) {
-            for (var d = 0; d < this.dim; d++) {
-                var yold = this.Y[i][d];
-
-                this.Y[i][d] = yold + e;
-                var cg0 = this.costGrad(this.Y);
-
-                this.Y[i][d] = yold - e;
-                var cg1 = this.costGrad(this.Y);
-                var analytic = grad[i][d];
-                var numerical = (cg0.cost - cg1.cost) / (2 * e);
-                console.log(i + ',' + d + ': gradcheck analytic: ' + analytic +
-                    ' vs. numerical: ' + numerical);
-
-                this.Y[i][d] = yold;
-            }
-        }
-    }
-
-
-
     /** 
      * return cost and gradient, given an arrangement
-     * compute `cost` take > 99% time in t-SNE, so we make it optional
+     * compute `cost` take > 90% time in t-SNE, so we make it optional
      */
     costGrad(Y, calc_cost=true) {
-        if (!calc_cost) return this.grad(Y);
         var N = this.N;
         var dim = this.dim; // dim of output space
         var P = this.P;
-
-        let qsum = this.distance_t(Y);
         let Qu = this.Qu;
 
-        var cost = 0.0;
-        var grad = [];
+        let qsum = 0.;
+        if (dim == 2) qsum = this.distance_t2d(Y); 
+        else if (dim == 3) qsum = this.distance_t3d(Y); 
+        else qsum = this.distance_t(Y);
+        
         // we need to optimize it heavily ...
-        var pmul = this.iter < 100 ? 4 : 1; // trick that helps with local optima
-
+        let pmul = this.iter < 100 ? 4 : 1; // trick that helps with local optima, form Andrej Karpathy's tsnejs
+        let grad = zeros2d(N, dim);
         for (let i = 0; i < N; i++) {
-            var gradi = zeros(dim); // init grad for point i
-            let Pi = P[i];
-            let Yi = Y[i];
-            for (var j = 0; j < N; j++) {
-                let Pij = Pi[j];
-                let Quij = Qu[i][j];
-                let Yj = Y[j];
-                let Qij = Math.max(Quij / qsum, 1e-100); // Yes, don't blow-up plz
-                
-                // cost = `KL(P, Q) = H(P, Q) - H(P)`
-                // Math.log2 may be faster than Math.log
-                cost += Pij * Math.log2(Pij / Qij); // accumulate cost
-                
+            let gradi = grad[i];
+            let Pi = P[i], Qui = Qu[i], Yi = Y[i];
+            for (let j = 0; j < N; j++) {
+                let Pij = Pi[j], Quij = Qui[j], Yj = Y[j];
+                let Qij = Quij / qsum;
                 for (let d = 0; d < dim; d++) {
                     // derivative of KL
                     gradi[d] += 4 * (pmul * Pij - Qij) * Quij * (Yi[d] - Yj[d]);
                 }
             }
-            grad.push(gradi);
+        }
+
+        let cost = 0.0;
+        if (calc_cost) {
+            for (let i = 0; i < N; i++) {
+                let Pi = P[i], Qui = Qu[i];
+                for (var j = 0; j < N; j++) {
+                    let Pij = Pi[j];
+                    let Quij = Qui[j];
+                    let Qij = Math.max(Quij / qsum, 1e-100); // Yes, don't blow-up plz
+                    // cost = `KL(P, Q) = H(P, Q) - H(P)`
+                    cost += Pij * Math.log(Pij / Qij); // accumulate cost
+                }
+            }
         }
 
         return { cost: cost, grad: grad };
     }
-
-    /**
-     * a much faster version
-     */
-    grad(Y) {
-        // "use asm";
-        var N = this.N;
-        var dim = this.dim; // dim of output space
-        var P = this.P;
-
-        let qsum = 0.0;
-        if (dim == 2) qsum = this.distance_t2d(Y); 
-        else if (dim == 3) qsum = this.distance_t3d(Y); 
-        else qsum = this.distance_t(Y);
-
-        let Qu = this.Qu;
-
-        var grad = [];
-        // we need to optimize it heavily ...
-
-        var pmul = this.iter < 100 ? 4 : 1; // trick that helps with local optima
-
-        for (var i = 0; i < N; i++) {
-            var gsum = zeros(dim); // init grad for point i
-            let Pi = P[i];
-            let Yi = Y[i];
-            let Qi = Qu[i];
-            for (var j = 0; j < N; j++) {
-                let Pij = +Pi[j];
-                let Quij = +Qi[j];
-                let Yj = Y[j];
-                let prefix = + 4 * (pmul * Pij - Quij / qsum) * Quij;
-                for (let d = 0; d < dim; d++) {
-                    // derivative of KL
-                    gsum[d] += prefix * (Yi[d] - Yj[d]);
-                }
-            }
-            grad.push(gsum);
-        }
-       
-        return { cost: 0.0, grad: grad };
-    }
-
 }
 
 export { tSNE };
