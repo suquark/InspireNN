@@ -13,7 +13,7 @@ class DimReductionBase {
     constructor(opt={}) {
         this.dim = getopt(opt, 'dim', 2); // by default 2-D
         this.epsilon = getopt(opt, 'epsilon', 10); // learning rate
-        this.optimizer = getopt(opt, 'optimizer', 'adam') ;
+        this.optimizer = getopt(opt, 'optimizer', 'adam');
         this.iter = 0;
     }
 

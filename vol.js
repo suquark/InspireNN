@@ -1,4 +1,5 @@
 import { get_norm_weights } from 'weights_init.js';
+import { zeros } from 'util/array.js';
 
 class Vol {
     constructor(sx, sy, depth, c) {
@@ -23,7 +24,7 @@ class Vol {
             if (typeof c === 'undefined') {
                 this.w = get_norm_weights(this.size);
             } else {
-                this.w = new Array(this.size).fill(c);
+                this.w = zeros(this.size).fill(c);
             }
         }
 
@@ -55,15 +56,36 @@ class Vol {
         var ix = ((this.sx * y) + x) * this.depth + d;
         this.dw[ix] += v; 
     }
-    max(limit=this.size) {
-        if (limit === this.size) 
-            return Math.max.apply(Math, this.w);
-            
-        var amax = this.w[0];
-        for(let i = 1; i < limit; i++) {
+
+    get max() {
+        let limit = this.size;
+        let amax = this.w[0];
+        for (let i = 1; i < limit; i++) {
             if(w[i] > amax) amax = w[i];
         }
         return amax;
+    }
+
+    get softmax() {
+        let es = zeros(N);
+        this.softmax_a(es);
+        return es;
+    }
+
+    softmax_a(es) {
+        let w = this.w;
+        let N = this.size;
+        // compute max activation
+        let amax = this.max;
+        // compute exponentials (carefully to not blow up)
+        let esum = 0.0;
+        for (let i = 0; i < N; i++) {
+            let e = Math.exp(w[i] - amax);
+            esum += e;
+            es[i] = e;
+        }
+        // normalize and output to sum to one
+        for (let i = 0; i < N; i++) es[i] /= esum;
     }
 
     max_index(limit=this.size) {     
@@ -87,7 +109,7 @@ class Vol {
         return V;
     }
     zeros_like() {
-        return new Array(this.size).fill(0.);
+        return zeros(this.size);
     }
     addFrom(V) { for(var k = 0; k < this.w.length; k++) { this.w[k] += V.w[k]; }}
     addFromScaled(V, a) { for(var k = 0; k < this.w.length; k++) { this.w[k] += a * V.w[k]; }}
@@ -133,6 +155,12 @@ class Vol {
     }
 }
 
+class Constant extends Vol {
+    constructor(value) {
+        super(1, 1, 1, value);
+    }
+}
+
 function createVector(depth, bias) {
     // bias == undefined will cause initialize
     return new Vol(1, 1, depth, bias);
@@ -151,4 +179,4 @@ function getVolFromJSON(json) {
     return new Vol(0, 0, 0, 0).fromJSON(json);
 }
 
-export { Vol, createVector, createMatrix, getVolFromJSON };
+export { Vol, createVector, createMatrix, getVolFromJSON, Constant };

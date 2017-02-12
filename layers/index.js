@@ -1,5 +1,5 @@
 import { InputLayer } from 'layers/layer.js';
-import { ReluLayer, SigmoidLayer, TanhLayer, MaxoutLayer } from 'layers/activation.js';
+import { ReLULayer, SigmoidLayer, TanhLayer, MaxoutLayer } from 'layers/activation.js';
 import { PoolLayer } from 'layers/pool.js';
 import { SVMLayer } from 'layers/svm.js';
 import { SoftmaxLayer } from 'layers/softmax.js';
@@ -12,7 +12,7 @@ import { DeconvLayer } from 'layers/deconv.js';
 
 var layer_dict = {
     'input' : InputLayer,
-    'relu' : ReluLayer,
+    'relu' : ReLULayer,
     'sigmoid' : SigmoidLayer,
     'tanh' : TanhLayer,
     'dropout' : DropoutLayer,
@@ -20,8 +20,6 @@ var layer_dict = {
     'deconv' : DeconvLayer,
     'pool' : PoolLayer,
     'lrn'  : LocalResponseNormalizationLayer,
-    'softmax' : SoftmaxLayer,
-    'regression' : RegressionLayer,
     'fc' : FullyConnLayer,
     'maxout' : MaxoutLayer,
     'svm' : SVMLayer

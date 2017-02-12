@@ -1,4 +1,5 @@
 import { randn } from 'util.js';
+import { zeros } from 'util/array.js';
 
 // weight normalization is done to equalize the output
 // variance of every neuron, otherwise neurons with a lot
@@ -11,7 +12,7 @@ function norm_weights(V) {
 
 function get_norm_weights(size) {
     let scale = Math.sqrt(1.0 / size);
-    let w = new Array(size)
+    let w = zeros(size);
     for (let i = 0; i < size; i++) w[i] = randn(0.0, scale);
     return w;
 }

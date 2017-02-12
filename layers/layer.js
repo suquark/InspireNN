@@ -33,9 +33,6 @@ class Layer {
             V.dw = V.zeros_like();
         });
     }
-
-   
-  
     
     forward(V, is_training) {
         /*
@@ -79,28 +76,6 @@ class Layer {
 
     createOutput() {
         return new Array(this.out_sx*this.out_sy*this.out_depth).fill(0.);
-    }
-}
-
-class OutputLayer extends Layer {
-    constructor(layer_type, opt={}) { 
-        super(layer_type, opt); 
-        this.num_inputs = opt.in_sx * opt.in_sy * opt.in_depth;
-        // override
-        this.out_sx = 1;
-        this.out_sy = 1;
-        this.out_depth = this.num_inputs;
-    }
-
-    toJSON() {
-        var json = super.toJSON();
-        json.num_inputs = this.num_inputs;
-        return json;
-    }
-
-    fromJSON(json) {
-        super.fromJSON(json);
-        this.num_inputs = json.num_inputs;
     }
 }
 
