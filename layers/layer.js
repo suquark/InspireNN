@@ -19,7 +19,7 @@ class Layer {
 
     compile(options) {
         // setup objects for training
-        this.updated.forEach(function(V) {
+        this.updated.forEach((V) => {
             V.dw = V.zeros_like();
             V.optimizer = get_optimizer(V.size, options);
             if (V.allow_regl) V.regularizer = new Regularization(options.l2_decay, options.l1_decay, this.l2_decay_mul, this.l1_decay_mul);

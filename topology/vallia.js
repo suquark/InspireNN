@@ -80,7 +80,7 @@ class Net {
 
     // this is a convenience function for returning the argmax
     // return index of the class with highest class probability
-    get prediction(x) {
+    prediction(x) {
         if (typeof x !== 'undefined') this.forward(x);
         // assume output is a vector
         return this.output.max_index;

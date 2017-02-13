@@ -40,6 +40,8 @@ class Trainer {
             let updates = this.net.trainables;
             for (let i in updates) {
                 let T = updates[i];
+                
+
                 if (T.regularizer) regular_loss += T.regularizer.punish(T);
                 // make raw batch gradient
                 T.batchGrad(this.batch_size);
@@ -51,7 +53,7 @@ class Trainer {
 
         return {
             fwd_time: timer.getTime('forward'), 
-            bwd_time: getTime('backward'), 
+            bwd_time: timer.getTime('backward'), 
 
             regular_loss: regular_loss,
             cost_loss: cost_loss,

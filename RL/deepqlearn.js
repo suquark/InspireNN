@@ -122,16 +122,8 @@ class DQN {
         // compute the value of doing any action in this state
         // and return the argmax action and its value
         let action_values = this.value_net.forward(new Vol(s));
-        let maxk = action_values.max_index();
+        let maxk = action_values.max_index;
         return { action: maxk, value: action_values.w[maxk] };
-    }
-
-    _toarray(arr) {
-        let a = [];
-        for (let i in arr) {
-            a.push(arr[i]);
-        }
-        return a;
     }
 
     getNetInput(xt) {
@@ -150,7 +142,7 @@ class DQN {
             // we dont want weight regularization to undervalue this information, as it only exists once
             let action1ofk = one_hot(this.num_actions, action, 1.0 * this.num_states);
 
-            w = w.concat(this._toarray(action1ofk)); // do not concat array & floatarray
+            w = w.concat(Array.prototype.slice.call(action1ofk)); // do not concat array & floatarray
         }
         return w;
     }

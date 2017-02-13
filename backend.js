@@ -6,16 +6,13 @@ function TensorVectorProduct(ov, m, v) {
     let ncol = m.axis(-1) | 0;
     let nrow = m.axis(-2) | 0;
     let new_shape = m.shape.slice(); new_shape.pop();
-    let bs = ncol * nrow | 0;
-    let N = (m.size / bs) | 0;
+    let N = (m.size / ncol) | 0;
 
     let mw = m.w, vw = v.w, ow = ov.w;
     ow.fill(0.);
-    for (let z = 0; z < N; z++) {
-        for (let i = 0; i < nrow; i++) {
-            for (let j = 0; j < ncol; j++) {
-                ow[z * nrow + i] += mw[z * bs + i * ncol + j] * vw[j];
-            }
+    for (let i = 0; i < N; i++) {
+        for (let j = 0; j < ncol; j++) {
+            ow[i] += mw[i * ncol + j] * vw[j];
         }
     }
 }
@@ -47,7 +44,6 @@ function TransposedTensorVectorProductAdd(ov, m, v) {
         }
     }
 }
-
 
 
 /**

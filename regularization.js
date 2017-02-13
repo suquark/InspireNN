@@ -23,7 +23,7 @@ class Regularization {
             decay_loss += l1_decay * Math.abs(p);
             let l1grad = l1_decay * (p > 0 ? 1 : -1);
             let l2grad = l2_decay * (p);
-            dx[i] -= (l2grad + l1grad);
+            dx[i] += (l2grad + l1grad);
         }
         return decay_loss;
     }

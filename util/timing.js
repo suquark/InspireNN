@@ -2,25 +2,25 @@ class Timer {
     constructor() {
         this.lasttime = {};
         this.sum = {};
-        if (performance.now) {
-            this.get_time = performance.now;
-        } else {
-            this.get_time = new Date.now;
-        }
+        // if (performance.now) {
+        //     this.get_time = performance.now;
+        // } else {
+        //     this.get_time = new Date.now;
+        // }
     }
 
     start(name) {
         if (!this.sum[name]) this.sum[name] 
         this.lastname = name;
-        lasttime[name] = this.get_time();
+        this.lasttime[name] = performance.now();
     }
 
     stop(name) {
-        this.sum[name] += this.get_time() - this.lasttime[name];
+        this.sum[name] += performance.now() - this.lasttime[name];
     }
 
     stoplast() {
-        this.sum[this.lastname] += this.get_time() - this.lasttime[this.lastname];
+        this.stop(this.lastname);
     }
 
     passto(name) {

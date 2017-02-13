@@ -28,7 +28,7 @@ class Vol {
             }
         }
 
-        // this.dw = this.zeros_like();  // -- save memory, allocmem at training?
+        this.dw = this.zeros_like();  // -- save memory, allocmem at training?
         this.length = this.size;
     }
 

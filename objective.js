@@ -6,9 +6,9 @@
 function meanSquaredError(x, y) {
     let N = x.size;
     let loss = 0.;
-    let aw = a.w, yw = x.w, adw = a.dw;
+    let xw = x.w, yw = y.w, xdw = x.dw;
     for (let i = 0; i < N; i++) {
-        let dx = aw[i] - yw[i];
+        let dx = xw[i] - yw[i];
         xdw[i] += dx;
         loss += 0.5 * dx * dx;
     }
