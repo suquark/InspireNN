@@ -126,6 +126,14 @@ class DQN {
         return { action: maxk, value: action_values.w[maxk] };
     }
 
+    _toarray(arr) {
+        let a = [];
+        for (let i in arr) {
+            a.push(arr[i]);
+        }
+        return a;
+    }
+
     getNetInput(xt) {
         // return s = (x, a, x, a, x, a, xt) state vector. 
         // It's a concatenation of last window_size (x,a) pairs and current state x
@@ -141,7 +149,8 @@ class DQN {
             // action, encoded as 1-of-k indicator vector. We scale it up a bit because
             // we dont want weight regularization to undervalue this information, as it only exists once
             let action1ofk = one_hot(this.num_actions, action, 1.0 * this.num_states);
-            w = w.concat(action1ofk);
+
+            w = w.concat(this._toarray(action1ofk)); // do not concat array & floatarray
         }
         return w;
     }

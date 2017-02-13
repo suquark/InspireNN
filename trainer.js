@@ -1,66 +1,64 @@
 import { getopt } from 'util.js'
-import { Regularization } from 'regularization.js'
+
+import getLoss from 'objective.js';
+import { Timer } from 'util/timing.js';
 
 class Trainer {
 
     constructor(net, options={}) {
         options.method = getopt(options, 'method', 'sgd'); 
-
         this.net = net;
+        this.loss = getLoss(options.loss);
+
         this.net.compile(options);  // alloc mem for optimizers
+
         this.batch_size = getopt(options, 'batch_size', 1); 
-        this.regular = new Regularization(options.l2_decay, options.l1_decay);
+        // this.regular = new Regularization(options.l2_decay, options.l1_decay);
         
         this.k = 0; // iteration counter
+    }
 
-        // check if regression is expected 
-        this.regression = (this.net.outputLayer().layer_type === "regression");
+    getLoss(x, y) {
+        this.net.forward(x, false);
+        return this.loss(this.net.output, y);
     }
 
     train(x, y) {
-
-        var start = new Date().getTime();
+        let timer = new Timer();
+        timer.start('forward');
         this.net.forward(x, true); // also set the flag that lets the net know we're just training
-        var end = new Date().getTime();
-        var fwd_time = end - start;
+        timer.passto('backward');
+        let cost_loss = this.loss(this.net.output, y);
+        this.net.backward();
+        timer.stoplast();
 
-        var start = new Date().getTime();
-        var cost_loss = this.net.backward(y);
-        var end = new Date().getTime();
-        var bwd_time = end - start;
-
-        // if(this.regression && y.constructor !== Array)
-        //     console.log("Warning: a regression net requires an array as training output vector.");
-        
-        this.regular.clear_loss();
+        let regular_loss = 0.;
 
         this.k++;
         if (this.k % this.batch_size === 0) {
             // param, gradient, other options in future (custom learning rate etc)
-            let pgs = this.net.getParamsAndGrads();
-            for (let i in pgs) {
-                let pg = pgs[i];
-                let p = pg.params, g = pg.grads;
-                let batch_grad = this.regular.get_punish(p, pg.l2_decay_mul, pg.l1_decay_loss);
+            let updates = this.net.trainables;
+            for (let i in updates) {
+                let T = updates[i];
+                if (T.regularizer) regular_loss += T.regularizer.punish(T);
                 // make raw batch gradient
-                for (let i in p) {
-                    batch_grad[i] = (batch_grad[i] + g[i]) / this.batch_size; 
-                }
-                let update = pg.optimizer.grad(batch_grad);
+                T.batchGrad(this.batch_size);
                 // perform an update for all sets of weights
-                for (let i in p) p[i] += update[i];
+                T.optimizer.optimize(T);
+                if (T.restrictor) T.restrictor.restrict(T);
             }
         }
 
-        // appending softmax_loss for backwards compatibility, but from now on we will always use cost_loss
-        // in future, TODO: have to completely redo the way loss is done around the network as currently 
-        // loss is a bit of a hack. Ideally, user should specify arbitrary number of loss functions on any layer
-        // and it should all be computed correctly and automatically. 
-        return {fwd_time: fwd_time, bwd_time: bwd_time, 
-                l2_decay_loss: this.regular.l2_decay_loss, l1_decay_loss: this.regular.l1_decay_loss,
-                cost_loss: cost_loss, softmax_loss: cost_loss, 
-                loss: cost_loss + this.regular.l1_decay_loss + this.regular.l2_decay_loss}
+        return {
+            fwd_time: timer.getTime('forward'), 
+            bwd_time: getTime('backward'), 
+
+            regular_loss: regular_loss,
+            cost_loss: cost_loss,
+            loss: cost_loss + regular_loss
+        }
     }
+
 }
 
 export { Trainer };

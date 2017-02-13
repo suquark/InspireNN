@@ -1,4 +1,5 @@
 import get_optimizer from 'optimizer/index.js';  // the default function
+import { Regularization } from 'regularization.js';
 import { getopt } from 'util.js'
 
 class Layer {
@@ -14,43 +15,24 @@ class Layer {
         this.updated = [];
     }
 
-    getParamsAndGrads() { return []; }
-
-    _pack_vars(vol, allow_regl=true) {
-        return {
-            params: vol.w, 
-            grads: vol.dw,
-            l1_decay_mul: allow_regl ? this.l1_decay_mul : 0., 
-            l2_decay_mul: allow_regl ? this.l2_decay_mul : 0.,
-            optimizer: vol.optimizer 
-        };
-    }
+    get trainables() { return []; }
 
     compile(options) {
-        // setup optimizers
+        // setup objects for training
         this.updated.forEach(function(V) {
-            V.optimizer = get_optimizer(V.size, options);
             V.dw = V.zeros_like();
+            V.optimizer = get_optimizer(V.size, options);
+            if (V.allow_regl) V.regularizer = new Regularization(options.l2_decay, options.l1_decay, this.l2_decay_mul, this.l1_decay_mul);
         });
     }
     
     forward(V, is_training) {
-        /*
-            this.in_act = V;
-            this.out_act = f(V);
-            return this.out_act;
-        */
         this.in_act = V;
         this.out_act = V; // nothing to do, output raw scores
         return V;
     }
 
-    backward() { 
-        /*
-            this.in_act.grad = f(V, this.out_act);
-            this.grad = g(this.w, this.out_act);
-        */
-    }
+    backward() { }
 
     toJSON() {
         var json = {};
@@ -91,4 +73,4 @@ class InputLayer extends Layer {
     }
 }
 
-export {Layer, OutputLayer, InputLayer};
+export {Layer, InputLayer};

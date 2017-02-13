@@ -40,6 +40,7 @@ class ConvLayer extends Layer {
         // initializations
         let bias = getopt(opt, 'bias_pref', 0.0);
         this.filters = createMatrix(this.out_depth, this.in_depth);
+        this.filters.forEach((V) => { V.allow_regl = true; });
         this.biases = createVector(this.out_depth, bias);
 
         // record updated values for updating
@@ -125,9 +126,9 @@ class ConvLayer extends Layer {
         }
     }
 
-    getParamsAndGrads() {
-        let response = this.filters.map(x => this._pack_vars(x));
-        response.push(this._pack_vars(this.biases, false));
+    get trainables() {
+        let response = this.filters.slice();
+        response.push(this.biases); 
         return response;
     }
 
@@ -146,6 +147,7 @@ class ConvLayer extends Layer {
         this.l2_decay_mul = getopt(json, 'l2_decay_mul', 1.0);
 
         this.filters = json.filters.map(getVolFromJSON);
+        this.filters.forEach((V) => { V.allow_regl = true; });
         this.biases = getVolFromJSON(json.biases);
         // record updated values for updating
         this.updated = this.filters.concat([this.biases]);

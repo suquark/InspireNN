@@ -3,7 +3,7 @@
  * @param {x} - output layer tensor
  * @param {y} - label tensor
  */
-function mse(x, y) {
+function meanSquaredError(x, y) {
     let N = x.size;
     let loss = 0.;
     let aw = a.w, yw = x.w, adw = a.dw;
@@ -16,11 +16,11 @@ function mse(x, y) {
 }
 
 /**
- * SVM loss
+ * SVM loss / Hinge loss
  * @param {x} - output layer tensor
  * @param {y} - case id
  */
-function svm(x, y) {
+function hingeLoss(x, y) {
     let N = x.size, xw = x.w, xdw = x.dw;
     // xdw.fill(0.); // zero out the gradient of input Vol
 
@@ -48,7 +48,7 @@ function svm(x, y) {
  * @param {x} - output layer tensor
  * @param {y} - case id
  */
-function multiclass_logarithmic(x, y) {
+function multiclassLogarithmicLoss(x, y) {
     let N = x.size, xw = x.w, xdx = x.dw;
     for (let i = 0; i < N; i++) {
         xdw[i] = 1.0 / ((i === y ? 0.0 : 1.0) - xw[i]);
@@ -62,7 +62,7 @@ function multiclass_logarithmic(x, y) {
  * @param {x} - output layer tensor
  * @param {y} - case id
  */
-function softmax_loss(x, y) {
+function softmaxLoss(x, y) {
     x.softmax_a(x.dw);
     let v = x.dw[y];
     x.dw[y] -= 1.0;
@@ -70,4 +70,15 @@ function softmax_loss(x, y) {
     return -Math.log(v);
 }
 
-export { mse, svm, multiclass_logarithmic };
+export { meanSquaredError, hingeLoss, multiclassLogarithmicLoss, softmaxLoss };
+
+export default function(name='mse') {
+    let dict = {
+        'mse' : meanSquaredError,
+        'hinge': hingeLoss,
+        'mclog': multiclassLogarithmicLoss,
+        'softmax': softmaxLoss
+    }
+    return dict[name];
+};
+

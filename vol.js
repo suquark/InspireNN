@@ -17,7 +17,7 @@ class Vol {
         this.sy = sy;
         this.depth = depth;
 
-        this.shape = [this.sx, this.sy, this.depth];
+        this.shape = [this.depth, this.sy, this.sx];
         this.size = this.sx * this.sy * this.depth;
  
         if (typeof this.w === 'undefined') {
@@ -28,8 +28,14 @@ class Vol {
             }
         }
 
-        this.dw = this.zeros_like();  // -- save memory, allocmem at training?
+        // this.dw = this.zeros_like();  // -- save memory, allocmem at training?
         this.length = this.size;
+    }
+
+    get ndim() { return this.shape.length };
+
+    axis(idx) {
+        return idx >= 0 ? this.shape[idx] : this.shape[this.ndim + idx]; 
     }
 
     get(x, y, d) { 
@@ -56,6 +62,8 @@ class Vol {
         var ix = ((this.sx * y) + x) * this.depth + d;
         this.dw[ix] += v; 
     }
+
+ 
 
     get max() {
         let limit = this.size;
@@ -88,7 +96,8 @@ class Vol {
         for (let i = 0; i < N; i++) es[i] /= esum;
     }
 
-    max_index(limit=this.size) {     
+    get max_index() {  
+        let limit = this.size;   
         let amax = this.w[0];
         let idx = 0;
         for (let i = 1; i < limit; i++) {
@@ -99,6 +108,12 @@ class Vol {
             }
         }
         return idx;
+    }
+
+    batchGrad(batch_size) {
+        for (let i = 0; i < this.size; i++) {
+            this.dw[i] /= batch_size;
+        }
     }
     
     cloneAndZero() { return new Vol(this.sx, this.sy, this.depth, 0.0); } 
@@ -133,14 +148,14 @@ class Vol {
         this.sy = json.sy;
         this.depth = json.depth;
         var n = this.sx*this.sy*this.depth;
-        this.w = new Array(n).fill(0.);
-        this.dw = new Array(n).fill(0.);
+        this.w = zeros(n);
+        this.dw = zeros(n);
 
         if (json.w instanceof Array) {
             // copy over the elements.
             this.w = json.w.slice();
         } else {
-            this.w = new Array(json.w.length);
+            this.w = zeros(json.w.length);
             for (let i in json.w) {
                 this.w[i] = json.w[i];
             }

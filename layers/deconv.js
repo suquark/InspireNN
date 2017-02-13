@@ -41,11 +41,11 @@ class DeconvLayer extends Layer {
         } else {
             this.out_sy = get_deconv_outsize(this.in_sy, this.sy, this.stride, this.pad);
         }
-     
-      
+
         // initializations
         let bias = getopt(opt, 'bias_pref', 0.0);
         this.filters = createMatrix(this.out_depth, this.in_depth);
+        this.filters.forEach((V) => { V.allow_regl = true; });
         this.biases = createVector(this.out_depth, bias);
 
         // record updated values for updating
@@ -99,9 +99,9 @@ class DeconvLayer extends Layer {
         // Not implement
     }
     
-    getParamsAndGrads() {
-        let response = this.filters.map(x => this._pack_vars(x));
-        response.push(this._pack_vars(this.biases, false)); 
+    get trainables() {
+        let response = this.filters.slice();
+        response.push(this.biases); 
         return response;
     }
 
@@ -120,6 +120,7 @@ class DeconvLayer extends Layer {
         this.l2_decay_mul = getopt(json, 'l2_decay_mul', 1.0);
         
         this.filters = json.filters.map(getVolFromJSON);
+        this.filters.forEach((V) => { V.allow_regl = true; });
         this.biases = getVolFromJSON(json.biases);
     }
 

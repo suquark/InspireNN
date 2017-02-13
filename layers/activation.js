@@ -45,7 +45,7 @@ class ReLULayer extends ActivationLayer {
  * f(x) = alpha * x for x < 0, f(x) = x for x >= 0
  * the output is in (-Inf, inf)
  */
-class LeakyReLULayer extends PActivationLayer {
+class LeakyReLULayer extends ActivationLayer {
     constructor(opt, leaky=0.2) { 
         super('lrelu', (y, x) => {
             let N = x.size, xw = x.w, yw = y.w;
@@ -66,7 +66,7 @@ class LeakyReLULayer extends PActivationLayer {
  * f(x) = ln(1+e^x)
  * the output is in (0, inf)
  */
-class SoftPlusLayer extends PActivationLayer {
+class SoftPlusLayer extends ActivationLayer {
     constructor(opt) { 
         super('softplus', (y, x) => {
             let N = x.size, xw = x.w, yw = y.w;
@@ -316,10 +316,18 @@ class MaxoutLayer extends Layer {
     }
 }
 
-export { 
+export {
     TanhLayer, SoftSignLayer,
     ReLULayer, LeakyReLULayer, ELULayer, SoftPlusLayer,
     MaxoutLayer, SoftmaxLayer,
     HardSigmoidLayer, SigmoidLayer
 };
 
+export default function() {
+    return {
+        'tanh': TanhLayer, 'softsign': SoftSignLayer,
+        'relu': ReLULayer, 'lrelu': LeakyReLULayer, 'elu': ELULayer, 'softplus': SoftPlusLayer,
+        'maxout': MaxoutLayer, 'softmax': SoftmaxLayer,
+        'hard_sigmoid': HardSigmoidLayer, 'sigmoid': SigmoidLayer
+    }
+};

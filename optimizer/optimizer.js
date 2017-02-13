@@ -4,6 +4,7 @@ const eps = 1e-8;  // eps added for better conditioning
 
 class grad_optimizer {
     constructor(len, opt={}) { }
+    optimize(T) { this.update(T.w, T.dw); }
     update(x, g) { }
     grad(g) {
         let dx = zeros(g.length);

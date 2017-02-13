@@ -1,8 +1,8 @@
-import { OutputLayer } from 'layers/layer.js';
+import { Layer } from 'layers/layer.js';
 import { Vol, createVector, createMatrix, getVolFromJSON } from 'vol.js';
 import {getopt} from 'util.js';
 
-class FullyConnLayer extends OutputLayer {
+class FullyConnLayer extends Layer {
 
     constructor (opt) {
         opt.serialize = ['l1_decay_mul', 'l2_decay_mul'];
@@ -10,7 +10,7 @@ class FullyConnLayer extends OutputLayer {
         // required
         // ok fine we will allow 'filters' as the word as well
         this.out_depth = getopt(opt, ['num_neurons', 'filters']);
-        // optional 
+        // optional
         this.l1_decay_mul = getopt(opt, 'l1_decay_mul', 0.0);
         this.l2_decay_mul = getopt(opt, 'l2_decay_mul', 1.0);
 
@@ -19,6 +19,7 @@ class FullyConnLayer extends OutputLayer {
         let bias = getopt(opt, 'bias_pref', 0.0);
         
         this.filters = createMatrix(this.out_depth, this.num_inputs);
+        this.filters.forEach((V) => { V.allow_regl = true; });
         this.biases = createVector(this.out_depth, bias);
         // record updated values for updating
         this.updated = this.filters.concat([this.biases]);
@@ -37,6 +38,11 @@ class FullyConnLayer extends OutputLayer {
             a += this.biases.w[i];
             A.w[i] = a;
         }
+
+        // TODO: patch this:
+        // TensorVectorProduct(this.out_act, this.filters, this.in_act);
+        // if (this.biases) TensorAdd_s(this.out_act, this.biases);
+
         this.out_act = A;
         return this.out_act;
     }
@@ -46,7 +52,7 @@ class FullyConnLayer extends OutputLayer {
         V.dw.fill(0.); // zero out the gradient in input Vol
         
         // compute gradient wrt weights and data
-        for(let i = 0; i < this.out_depth; i++) {
+        for (let i = 0; i < this.out_depth; i++) {
             let tfi = this.filters[i];
             let chain_grad = this.out_act.dw[i];
             for(let d = 0; d < this.num_inputs; d++) {
@@ -55,11 +61,15 @@ class FullyConnLayer extends OutputLayer {
             }
             this.biases.dw[i] += chain_grad;
         }
+
+        // TransposedTensorVectorProductAdd(this.in_act, this.filters, this.out_act@dw)
+        // VectorProductAdd(this.filters, this.in_act, this.out_act@dw)
+        // TensorAdd_s(this.biases, this.out_act@dw) 
     }
 
-    getParamsAndGrads() {
-        let response = this.filters.map(x => this._pack_vars(x));
-        response.push(this._pack_vars(this.biases, false)); 
+    get trainables() {
+        let response = this.filters.slice();
+        response.push(this.biases); 
         return response;
     }
 
@@ -76,6 +86,7 @@ class FullyConnLayer extends OutputLayer {
         this.l2_decay_mul = getopt(json, 'l2_decay_mul', 1.0);
         
         this.filters = json.filters.map(getVolFromJSON);
+        this.filters.forEach((V) => { V.allow_regl = true; });
         this.biases = getVolFromJSON(json.biases);
         // record updated values for updating
         this.updated = this.filters.concat([this.biases]);
