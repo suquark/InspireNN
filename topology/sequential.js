@@ -5,7 +5,7 @@ import { get_layer } from 'layers/index.js';
 // Net manages a set of layers
 // For now constraints: Simple linear order of layers, first layer input last layer a cost layer
 
-class Net {
+class Sequential {
     constructor(options) {
         this.layers = [];
         this.layer_map = {};
@@ -14,7 +14,7 @@ class Net {
     // takes a list of layer definitions and creates the network layer objects
     makeLayers(defs) {
         // few checks
-        assert(defs.length >= 2, 'Error! At least one input layer and one loss layer are required.');
+        assert(defs.length >= 1, 'Error! At least one layer is required.');
         assert(defs[0].type === 'input', 'Error! First layer must be the input layer, to declare size of inputs');
 
         for (let i in defs) {
@@ -57,12 +57,6 @@ class Net {
     forward(V, is_training=false) {
         return this.layers.reduce((input, layer) => layer.forward(input, is_training), V);
     }
-
-    // getCostLoss(V, y) {
-    //     this.forward(V, false);
-    //     let loss = this.outputLayer().backward(y);
-    //     return loss;
-    // }
     
     // backprop: compute gradients wrt all parameters
     backward() {
@@ -104,4 +98,4 @@ class Net {
 }
 
   
-export { Net };
+export { Sequential };

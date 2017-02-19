@@ -63,8 +63,6 @@ class Vol {
         this.dw[ix] += v; 
     }
 
- 
-
     get max() {
         let limit = this.size;
         let amax = this.w[0];
@@ -176,6 +174,12 @@ class Constant extends Vol {
     }
 }
 
+class Vector extends Vol {
+    constructor(size, value=0.) {
+        super(1, 1, size, value);
+    }
+}
+
 function createVector(depth, bias) {
     // bias == undefined will cause initialize
     return new Vol(1, 1, depth, bias);
@@ -194,4 +198,4 @@ function getVolFromJSON(json) {
     return new Vol(0, 0, 0, 0).fromJSON(json);
 }
 
-export { Vol, createVector, createMatrix, getVolFromJSON, Constant };
+export { Vol, createVector, createMatrix, getVolFromJSON, Constant, Vector };

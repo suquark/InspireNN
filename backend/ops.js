@@ -1,3 +1,5 @@
+import { assert, checkClass, isArray } from 'util/assert.js';
+import { zeros } from 'util/array.js';
 
 /**
  * ov = m * v
@@ -47,12 +49,25 @@ function TransposedTensorVectorProductAdd(ov, m, v) {
 
 
 /**
- * HadmardProduct apply to self
+ * 
  */
-function HadmardProduct_s(o, x) {
+function TensorConstantProduct(x, c) {
+    let o = x.cloneAndZero();
     let N = o.size, ow = o.w, xw = x.w;
     for (let i = 0; i < N; i++) {
-         ow[i] *= xw;
+         ow[i] = xw[i] * c;
+    }
+    return o;
+}
+
+/**
+ * HadmardProduct apply to self
+ */
+function HadmardProductAssign(o, x) {
+    let N = o.size, ow = o.w, xw = x.w;
+    for (let i = 0; i < N; i++) {
+         ow[i] *= xw[i];
     }
 }
 
+export { TensorConstantProduct, TensorVectorProduct, TransposedTensorVectorProductAdd, HadmardProductAssign };

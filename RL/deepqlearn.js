@@ -13,7 +13,7 @@ import { Vol } from 'vol.js';
 
 import { migrate } from 'conf.js';
 
-import { Net } from 'topology/vallia.js';
+import { Sequential } from 'topology/sequential.js';
 
 class Experience {
     // Experience nodes store all this information, which is used in the
@@ -246,9 +246,6 @@ class DQN {
         if (layer_defs[0].layer_type !== 'input') {
             console.warn('TROUBLE! first layer must be input layer!');
         }
-        if (layer_defs[layer_defs.length - 1].layer_type !== 'regression') {
-            console.warn('TROUBLE! last layer must be input regression!');
-        }
         if (layer_defs[0].out_depth * layer_defs[0].out_sx * layer_defs[0].out_sy !== this.net_inputs) {
             console.warn('TROUBLE! Number of inputs must be num_states * temporal_window + num_actions * temporal_window + num_states!');
         }
@@ -289,17 +286,5 @@ function dist_checker(a) {
     }
 }
 
-function get_simple_net(net_inputs, num_actions, hidden_layer_sizes) {
-    // create a very simple neural net by default
-    let layer_defs = [];
-    layer_defs.push({type: 'input', out_sx: 1, out_sy: 1, out_depth: net_inputs});
-    hidden_layer_sizes.forEach(function (n) {
-        layer_defs.push({type: 'fc', num_neurons: n, activation: 'relu'}); // relu by default
-    });
-    layer_defs.push({type: 'regression', num_neurons: num_actions}); // value function output
-    let value_net = new Net();
-    value_net.makeLayers(layer_defs);
-    return value_net;
-}
 
-export { DQN, visState, get_simple_net };
+export { DQN, visState };

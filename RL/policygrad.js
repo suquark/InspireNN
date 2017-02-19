@@ -9,7 +9,11 @@ import {
     AvgWindow
 } from 'util.js';
 
+import { Vol } from 'vol.js';
+
 import { migrate } from 'conf.js';
+
+import { Net } from 'topology/vallia.js';
 
 class Experience {
     // Experience nodes store all this information, which is used in the
@@ -22,12 +26,12 @@ class Experience {
     }
 }
 
-class Brain {
-    // A Brain object does all the magic.
+class DQN {
+    // A DQN Brain object does all the magic.
     // over time it receives some inputs and some rewards
     // and its job is to set the outputs to maximize the expected reward
 
-    constructor(num_states, num_actions, value_net, opt) {
+    constructor(num_states, num_actions, tdtrainer, opt) {
         let m = new migrate(this, opt);
         // in number of time steps, of temporal memory
         // the ACTUAL input to the net will be (x,a) temporal_window times, and followed by current x
@@ -73,18 +77,10 @@ class Brain {
         this.reward_window = new Array(this.window_size);
         this.net_window = new Array(this.window_size);
 
+        this.tdtrainer = tdtrainer;
         // create [state -> value of all possible actions] modeling net for the value function
-        this.value_net = value_net;
-        net_checker(this.value_net);
-
-        // and finally we need a Temporal Difference Learning trainer!
-        let tdtrainer_options = {
-            learning_rate: 0.01,
-            momentum: 0.0,
-            batch_size: 64,
-            l2_decay: 0.01
-        };
-        this.tdtrainer = new Trainer(this.value_net, tdtrainer_options);
+        this.value_net = this.tdtrainer.net;
+        this.net_checker(this.value_net);
 
         // experience replay
         this.experience = [];
@@ -117,8 +113,8 @@ class Brain {
         // compute the value of doing any action in this state
         // and return the argmax action and its value
         let action_values = this.value_net.forward(new Vol(s));
-        let maxk = action_values.max_index();
-        return { action: maxk, value: action_values[maxk] };
+        let maxk = action_values.max_index;
+        return { action: maxk, value: action_values.w[maxk] };
     }
 
     getNetInput(xt) {
@@ -130,12 +126,14 @@ class Brain {
         var n = this.window_size;
         for (let k = 0; k < this.temporal_window; k++) {
             let state = this.state_window[n - 1 - k];
+            let action = this.action_window[n - 1 - k];
             // state
             w = w.concat(state);
             // action, encoded as 1-of-k indicator vector. We scale it up a bit because
             // we dont want weight regularization to undervalue this information, as it only exists once
-            let action1ofk = one_hot(this.num_actions, state, 1.0 * this.num_states);
-            w = w.concat(action1ofk);
+            let action1ofk = one_hot(this.num_actions, action, 1.0 * this.num_states);
+
+            w = w.concat(Array.prototype.slice.call(action1ofk)); // do not concat array & floatarray
         }
         return w;
     }
@@ -227,6 +225,25 @@ class Brain {
             this.average_loss_window.add(avcost);
         }
     }
+
+    net_checker(net) {
+        // this is an advanced usage feature, because size of the input to the network, and number of
+        // actions must check out. This is not very pretty Object Oriented programming but I can't see
+        // a way out of it :(
+        let layer_defs = net.layers;
+        if (layer_defs.length < 2) {
+            console.warn('TROUBLE! must have at least 2 layers');
+        }
+        if (layer_defs[0].layer_type !== 'input') {
+            console.warn('TROUBLE! first layer must be input layer!');
+        }
+        if (layer_defs[0].out_depth * layer_defs[0].out_sx * layer_defs[0].out_sy !== this.net_inputs) {
+            console.warn('TROUBLE! Number of inputs must be num_states * temporal_window + num_actions * temporal_window + num_states!');
+        }
+        if (layer_defs[layer_defs.length - 1].out_size !== this.num_actions) {
+            console.warn('TROUBLE! Number of regression neurons should be num_actions!');
+        }
+    }
 }
 
 function visState(brain, node) {
@@ -248,27 +265,7 @@ function visState(brain, node) {
     elt.appendChild(brainvis);
 }
 
-function net_checker(net) {
-    // this is an advanced usage feature, because size of the input to the network, and number of
-    // actions must check out. This is not very pretty Object Oriented programming but I can't see
-    // a way out of it :(
-    layer_defs = net.layers;
-    if (layer_defs.length < 2) {
-        console.warn('TROUBLE! must have at least 2 layers');
-    }
-    if (layer_defs[0].layer_type !== 'input') {
-        console.warn('TROUBLE! first layer must be input layer!');
-    }
-    if (layer_defs[layer_defs.length - 1].layer_type !== 'regression') {
-        console.warn('TROUBLE! last layer must be input regression!');
-    }
-    if (layer_defs[0].out_depth * layer_defs[0].out_sx * layer_defs[0].out_sy !== this.net_inputs) {
-        console.warn('TROUBLE! Number of inputs must be num_states * temporal_window + num_actions * temporal_window + num_states!');
-    }
-    // if (layer_defs[layer_defs.length - 1].num_neurons !== this.num_actions) {
-    //     console.warn('TROUBLE! Number of regression neurons should be num_actions!');
-    // }
-}
+
 
 function dist_checker(a) {
     var s = 0.0;
@@ -280,10 +277,10 @@ function dist_checker(a) {
     }
 }
 
-function get_simple_net(hidden_layer_sizes) {
+function get_simple_net(net_inputs, num_actions, hidden_layer_sizes) {
     // create a very simple neural net by default
     let layer_defs = [];
-    layer_defs.push({type: 'input', out_sx: 1, out_sy: 1, out_depth: this.net_inputs});
+    layer_defs.push({type: 'input', out_sx: 1, out_sy: 1, out_depth: net_inputs});
     hidden_layer_sizes.forEach(function (n) {
         layer_defs.push({type: 'fc', num_neurons: n, activation: 'relu'}); // relu by default
     });
@@ -293,4 +290,4 @@ function get_simple_net(hidden_layer_sizes) {
     return value_net;
 }
 
-export { Brain, visState };
+export { DQN, visState, get_simple_net };

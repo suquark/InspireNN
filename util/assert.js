@@ -16,6 +16,10 @@ function checkClass(instance, match) {
     return Object.prototype.toString.call(instance).match(match);
 }
 
+function isArray(arr) {
+    return checkClass(arr, 'Array') && typeof arr.length === 'number' && arr.length === Math.floor(arr.length);
+}
+
 /**
  * Check if the first dimemsion is equal to the second of an array.
  * @returns {length} - first dimemsion length
@@ -32,4 +36,4 @@ function assertArray2D(array) {
     return [array.length, array[0].length];
 }
 
-export { assert, checkClass, assertSquare, assertArray2D };
+export { assert, checkClass, assertSquare, assertArray2D, isArray };

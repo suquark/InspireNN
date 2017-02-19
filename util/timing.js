@@ -10,7 +10,7 @@ class Timer {
     }
 
     start(name) {
-        if (!this.sum[name]) this.sum[name] 
+        if (!this.sum[name]) this.sum[name] = 0.;
         this.lastname = name;
         this.lasttime[name] = performance.now();
     }

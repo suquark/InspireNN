@@ -27,6 +27,7 @@ function randf(a, b) { return Math.random() * (b-a) + a; }
 function randi(a, b) { return Math.floor(Math.random() * (b-a) + a); }
 function randn(mu, std) { return mu + gaussRandom() * std; }
 
+
 // utility that returns 2d array filled with random numbers (n * d)
 function randn2d(n, d, mu, std) {
     var x = [];

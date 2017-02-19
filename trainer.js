@@ -13,7 +13,6 @@ class Trainer {
         this.net.compile(options);  // alloc mem for optimizers
 
         this.batch_size = getopt(options, 'batch_size', 1); 
-        // this.regular = new Regularization(options.l2_decay, options.l1_decay);
         
         this.k = 0; // iteration counter
     }
@@ -40,8 +39,7 @@ class Trainer {
             let updates = this.net.trainables;
             for (let i in updates) {
                 let T = updates[i];
-                
-
+                // FIXME: make sure that if regularization needed to be averaged
                 if (T.regularizer) regular_loss += T.regularizer.punish(T);
                 // make raw batch gradient
                 T.batchGrad(this.batch_size);
