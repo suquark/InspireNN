@@ -54,6 +54,10 @@ class Tensor {
         return this._shape;
     }
 
+    get size() {
+        return this._size;
+    }
+
     /**
      * length of pixel
      */
@@ -133,10 +137,7 @@ class Tensor {
     cloneAndZero() { return new Tensor(this.shape); }
 
     clone() {
-        var V = new Tensor(this.shape);
-        var n = this.w.length;
-        V.w = this.w.slice();
-        return V;
+        return new Tensor(this.shape, this.w.slice());
     }
 
     zeros_like() {
@@ -163,7 +164,6 @@ class Vector extends Tensor {
         super([size], rawdata);
     }
 }
-
 
 class Placeholder {
     constructor(shape=[null]) {

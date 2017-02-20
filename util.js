@@ -28,6 +28,7 @@ function normalize_angle(angle) {
     return nangle;
 }
 
+
 class AvgWindow {
     // a window stores _size_ number of values
     // and returns averages. Useful for keeping running
@@ -54,24 +55,7 @@ class AvgWindow {
     }
 }
 
-// Load JSON text from server hosted file and return JSON parsed object
-function loadJSONSync(filePath) {
-  // Load json file;
-  var json = loadTextFileSync(filePath, "application/json");
-  // Parse json
-  return JSON.parse(json);
-}
 
-function loadTextFileSync(filePath, mimeType)
-{
-    var xmlhttp = new XMLHttpRequest();
-    xmlhttp.open("GET", filePath, false);
-    if (mimeType != null && xmlhttp.overrideMimeType) {
-        xmlhttp.overrideMimeType(mimeType);
-    }
-    xmlhttp.send();
-    return xmlhttp.status == 200 ? xmlhttp.responseText : null;
-}
 
 function b64ToUint6 (nChr) {
   return nChr > 64 && nChr < 91 ? nChr - 65 : 
@@ -99,24 +83,9 @@ function base64DecToArr (sBase64, nBlocksSize) {
   return taBytes;
 }
 
-if (!$) $ = {};
-
-$.getBinary = function(url, callback) {
-    var oReq = new XMLHttpRequest();
-    oReq.open("GET", url, true);
-    oReq.responseType = "arraybuffer";
-    oReq.onload = function (oEvent) {
-        var arrayBuffer = oReq.response; // Note: not oReq.responseText
-        callback(arrayBuffer);
-    };
-    oReq.send(null);
-}
-
-
 
 export {
-    getopt, clip, normalize_angle, AvgWindow,
-    loadJSONSync, loadTextFileSync
+    getopt, clip, normalize_angle, AvgWindow
 };
 
 export * from 'util/random.js';

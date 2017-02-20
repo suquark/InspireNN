@@ -21,8 +21,10 @@ function TensorVectorProduct(ov, m, v) {
 
 /**
  * ov += m' * v
+ * @param { Tensor } m - tensor to be transposed
+ * @param { Tensor } v - right-hand-side tensor
  */
-function TransposedTensorVectorProductAdd(ov, m, v) {
+function TransposedTensorVectorAddAssign(ov, m, v) {
     let ncol = m.axis(-1) | 0;  
     let nrow = m.axis(-2) | 0;
     let new_shape = m.shape.slice();
@@ -41,7 +43,7 @@ function TransposedTensorVectorProductAdd(ov, m, v) {
         for (let i = 0; i < nrow; i++) {
             for (let j = 0; j < ncol; j++) {
                 // transposed order
-                ow[z * ncol + j] += mw[z * bs + i * ncol + j] * vw[i];
+                ow[z * ncol + j] += mw[z * bs + i * ncol + j] * vw[j];
             }
         }
     }
@@ -70,4 +72,4 @@ function HadmardProductAssign(o, x) {
     }
 }
 
-export { TensorConstantProduct, TensorVectorProduct, TransposedTensorVectorProductAdd, HadmardProductAssign };
+export { TensorConstantProduct, TensorVectorProduct, TransposedTensorVectorAddAssign, HadmardProductAssign };
