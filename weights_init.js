@@ -1,4 +1,4 @@
-import { randn } from 'util.js';
+import { randn } from 'util/random.js';
 import { zeros } from 'util/array.js';
 
 // weight normalization is done to equalize the output

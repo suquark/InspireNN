@@ -87,8 +87,3 @@ function base64DecToArr (sBase64, nBlocksSize) {
 export {
     getopt, clip, normalize_angle, AvgWindow
 };
-
-export * from 'util/random.js';
-export * from 'util/array.js';
-export * from 'util/numeric.js';
-export * from 'util/assert.js';

@@ -1,5 +1,5 @@
 import { Vol } from 'vol.js';
-import { assert } from 'util.js';
+import { assert } from 'util/assert.js';
 import { get_layer } from 'layers/index.js';
 
 // Net manages a set of layers

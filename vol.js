@@ -4,7 +4,7 @@ import { zeros } from 'util/array.js';
 class Vol {
     constructor(sx, sy, depth, c) {
         // this is how you check if a variable is an array. Oh, Javascript :)
-        if(Object.prototype.toString.call(sx) === '[object Array]') {
+        if (Object.prototype.toString.call(sx) === '[object Array]') {
             this.w = sx.slice(); // copy content
             // we were given a list in sx, assume 1D volume and fill it up
             sx = 1;

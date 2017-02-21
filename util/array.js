@@ -11,7 +11,7 @@ function zeros(n) {
         // lacking browser support
         return new Array(n).fill(0.);
     } else {
-        return new Float64Array(n);  // typed arrays are faster
+        return new Float32Array(n);  // typed arrays are faster
     }
 }
 

@@ -36,14 +36,11 @@ class Tensor {
         }
 
         // turn into native
-        this._data = new ArrayBuffer(this._size * 4);
-        this.w = new Float32Array(this._data);
-        // TODO: not very efficient as of copy
-        if (typeof rawdata !== 'undefined') {
-            for (let i = 0; i < this._size; i++) {
-                this.w[i] = rawdata[i];
-            }
-        }
+        this.w = typeof rawdata !== 'undefined' ? Float32Array.from(rawdata) : zeros(this._size);
+    }
+
+    get buffer() {
+        return this.w.buffer;
     }
 
     get ndim() {
@@ -144,17 +141,24 @@ class Tensor {
         return zeros(this.size);
     }
 
-    get serialize() {
-        let bytes = new Uint8Array(buffer);
-        let s = String.fromCharCode.apply(bytes);
-        return window.btoa(s);
+    save(buf) {
+        return {name: this.name, shape: this.shape, type: 'tensor'};
     }
 
-    load(s) {
-        let bs = window.atob(s);
-        for (let i = 0; i < bs.length; i++) {
-            this.w[i] = bs.charCodeAt(i);
+    /**
+     * Load a tensor from buffer
+     * @param { object } t - Object that contains info about tensor we want to get
+     * @param { BufferReader } buf - The ArrayBuffer contains data
+     * @return { Tensor } - the loaded tensor
+     */
+    static load(map, buf) {
+        let length = 1;
+        for (let i = 0; i < map.shape.length; i++) {
+            length *= map.shape[i];
         }
+        let t = new Tensor(map.shape, buf.read(length, 'Float32Array'));
+        t.name = map.name;
+        return t;
     }
     
 }
