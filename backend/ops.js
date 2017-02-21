@@ -1,5 +1,38 @@
 import { assert, checkClass, isArray } from 'util/assert.js';
 import { zeros } from 'util/array.js';
+import { gaussRandom } from 'util/random.js';
+
+function uniform_rand(t, floor, ceil) {
+    let N = t.size, tw = t.w;
+    for (let i = 0; i < N; i++) {
+        tw[i] = Math.random();
+    }
+    scale_shift(t, ceil - floor, floor);
+}
+
+function normal_rand(t, mu, std) {
+    let N = t.size, tw = t.w;
+    for (let i = 0; i < N; i++) {
+        tw[i] = gaussRandom();
+    }
+    scale_shift(t, std, mu);
+}
+
+function clip(x, min_value=-1.0, max_value=1.0) {
+    let N = x.size, w = x.w;
+    for (let i = 0; i < N; i++) {
+        let wi = w[i];
+        if (wi > max_value) w[i] = max_value; else if (wi < min_value) w[i] = min_value;
+    }
+}
+
+function clip_pixel(x) {
+    let N = x.size, w = x.w;
+    for (let i = 0; i < N; i++) {
+        let wi = w[i];
+        if (wi >= 1.0) w[i] = 255; else if (wi <= -1.0) w[i] = 0; else w[i] = Math.round(255 * (x + 1.0) / 2.0) | 0;
+    }
+}
 
 /**
  * ov = m * v
@@ -62,6 +95,31 @@ function TensorConstantProduct(x, c) {
     return o;
 }
 
+
+function scale(x, c) {
+    let N = x.size, xw = x.w;
+    for (let i = 0; i < N; i++) {
+         xw[i] *= c;
+    }
+}
+
+
+function shift(x, c) {
+    let N = x.size, xw = x.w;
+    for (let i = 0; i < N; i++) {
+         xw[i] += c;
+    }
+}
+
+
+function scale_shift(x, a, b) {
+    let N = x.size, xw = x.w;
+    for (let i = 0; i < N; i++) {
+         xw[i] = xw[i] * a + b;
+    }
+}
+
+
 /**
  * HadmardProduct apply to self
  */
@@ -72,4 +130,9 @@ function HadmardProductAssign(o, x) {
     }
 }
 
-export { TensorConstantProduct, TensorVectorProduct, TransposedTensorVectorAddAssign, HadmardProductAssign };
+export {
+    clip, clip_pixel,
+    scale, shift, scale_shift,
+    TensorVectorProduct, TransposedTensorVectorAddAssign, HadmardProductAssign,
+    uniform_rand, normal_rand
+};

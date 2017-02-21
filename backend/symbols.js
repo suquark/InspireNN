@@ -8,7 +8,7 @@
 
 import { Tensor } from 'backend/tensor.js';
 import { Buffer } from 'util/buffer.js';
-import { getBinary, getJSON, exportText, exportBinary } from 'util/request.js';
+import { getJSON, exportJSON } from 'util/request.js';
 var globals = {};
 
 
@@ -50,7 +50,7 @@ function batchLoadFile2Global(pairs, callback) {
 
 function loadFile2Global(mapfile, rawfile) {
     // create a pair of file access
-    let task_pair = [getJSON(mapfile), getBinary(rawfile)];
+    let task_pair = [getJSON(mapfile), Buffer.fromURL(rawfile)];
     // wait for both of then to be done and return a `Promise`
     return Promise.all(task_pair).then(pair => new Promise((resolve, reject) => {
         if (pair && pair.length == 2) {
@@ -71,7 +71,7 @@ function loadFile2Global(mapfile, rawfile) {
  * @param { object } map - The map that tells the structure of data 
  */
 function load2Global(map, buf) {
-    _loadDir(globals, map, new Buffer(buf));
+    _loadDir(globals, map, buf);
 }
 
 
@@ -134,6 +134,8 @@ function _loadValue(v, buf) {
     {
         case 'tensor':
             return Tensor.load(v, buf);
+        // case 'int32array':
+        //     return 
         default:
             throw "Undefined type";
     }
@@ -158,7 +160,8 @@ function saveDict(mapfile, rawfile, dir) {
     let map = [];
     let buf = new Buffer();
     _saveDir(dir, map, buf);
-    // ...
+    exportJSON(mapfile, map);
+    buf.export(rawfile);
 }
 
 /**
@@ -187,5 +190,6 @@ function _saveValue(value, buf) {
 export { 
     globals,
     fetch, fetchFrom,
-    loadFile2Global, batchLoadFile2Global
+    loadFile2Global, batchLoadFile2Global,
+    saveGlobal, saveDict
 };

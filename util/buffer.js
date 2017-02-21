@@ -1,4 +1,4 @@
-
+import { getBinary, exportBinary } from 'util/request.js';
 
 // FIXME: not very efficient
 function bufCopy(dst, src, start=0) {
@@ -73,6 +73,15 @@ class Buffer {
 
     get byteLength() {
         return this.buffer.byteLength;
+    }
+
+    static fromURL(url) {
+        return getBinary(url).then(buf => new Buffer(buf));
+    }
+
+    export(filename) {
+        // only export useful part
+        exportBinary(filename, this.buffer.slice(0, this.offset));
     }
 }
 

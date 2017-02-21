@@ -4,18 +4,10 @@
  */
 
 function getJSON(url, async=true) {
-    if (async) {
-        return new Promise((resolve, reject) => {
-            getText(url, "application/json").then(json => {
-                resolve(JSON.parse(json));
-            }).catch((error) => {
-                reject(error);
-            });
-        });
-    } else {
-        var json = getTextSync(url, "application/json", false);
-        return JSON.parse(json);
-    }
+    if (async)
+        return getText(url, "application/json").then(json => JSON.parse(json));
+    else
+        return JSON.parse(getTextSync(url, "application/json", false));
 }
 
 function getBinary(url) {
@@ -94,7 +86,11 @@ function saveAs(filename, data, type) {
  * export text to file, as download content
  */
 function exportText(filename, data) {
-    saveAs(filename, data, 'text/csv/json');
+    saveAs(filename, data, 'text/csv');
+}
+
+function exportJSON(filename, data) {
+    saveAs(filename, JSON.stringify(data), 'json');
 }
 
 /**
@@ -106,5 +102,5 @@ function exportBinary(filename, data) {
 
 export {
     getJSON, getBinary, getText,
-    saveAs, exportText, exportBinary
+    saveAs, exportText, exportBinary, exportJSON
 };

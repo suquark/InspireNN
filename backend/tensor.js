@@ -82,7 +82,7 @@ class Tensor {
 
     get max() {
         let limit = this.size;
-        let amax = this.w[0];
+        let amax = this.w[0], w = this.w;
         for (let i = 1; i < limit; i++) {
             if(w[i] > amax) amax = w[i];
         }
@@ -142,6 +142,7 @@ class Tensor {
     }
 
     save(buf) {
+        buf.write(this.buffer);
         return {name: this.name, shape: this.shape, type: 'tensor'};
     }
 
