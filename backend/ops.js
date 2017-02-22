@@ -18,6 +18,8 @@ function normal_rand(t, mu, std) {
     scale_shift(t, std, mu);
 }
 
+
+
 function clip(x, min_value=-1.0, max_value=1.0) {
     let N = x.size, w = x.w;
     for (let i = 0; i < N; i++) {
@@ -30,7 +32,7 @@ function clip_pixel(x) {
     let N = x.size, w = x.w;
     for (let i = 0; i < N; i++) {
         let wi = w[i];
-        if (wi >= 1.0) w[i] = 255; else if (wi <= -1.0) w[i] = 0; else w[i] = Math.round(255 * (x + 1.0) / 2.0) | 0;
+        if (wi >= 1.0) w[i] = 255; else if (wi <= -1.0) w[i] = 0; else w[i] = Math.round(255 * (wi + 1.0) / 2.0) | 0;
     }
 }
 
@@ -96,6 +98,13 @@ function TensorConstantProduct(x, c) {
 }
 
 
+function negative(x) {
+    let N = x.size, xw = x.w;
+    for (let i = 0; i < N; i++) {
+         xw[i] = -xw[i];
+    }
+}
+
 function scale(x, c) {
     let N = x.size, xw = x.w;
     for (let i = 0; i < N; i++) {
@@ -132,7 +141,7 @@ function HadmardProductAssign(o, x) {
 
 export {
     clip, clip_pixel,
-    scale, shift, scale_shift,
+    scale, shift, scale_shift, negative,
     TensorVectorProduct, TransposedTensorVectorAddAssign, HadmardProductAssign,
     uniform_rand, normal_rand
 };

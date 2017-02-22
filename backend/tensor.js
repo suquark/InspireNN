@@ -142,7 +142,7 @@ class Tensor {
     }
 
     save(buf) {
-        buf.write(this.buffer);
+        buf.write(this.w);
         return {name: this.name, shape: this.shape, type: 'tensor'};
     }
 

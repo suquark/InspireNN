@@ -7,8 +7,10 @@
  */
 
 import { Tensor } from 'backend/tensor.js';
-import { Buffer } from 'util/buffer.js';
+import { Buffer } from 'backend/buffer.js';
+import { ImageBuffer } from 'backend/image.js';
 import { getJSON, exportJSON } from 'util/request.js';
+import { getNativeType } from 'util/assert.js';
 var globals = {};
 
 
@@ -23,7 +25,6 @@ function fetch(abspath) {
     }
     return fetchFrom(globals, abspath);
 }
-
 
 /**
  * Fetch object within certain context by path
@@ -40,6 +41,46 @@ function fetchFrom(dir, path) {
 }
 
 
+/**
+ * Fetch object by path
+ * @param {string} abspath - Absolute path for object
+ * @returns {object} - object we get
+ */
+function store(abspath, value) {
+    if (abspath.startsWith('/')) {
+        abspath = abspath.substring(1);  // OK, unix-style is just right
+    }
+    return storeAt(globals, abspath, value);
+}
+
+/**
+ * Fetch object within certain context by path
+ * @param {object} dir - top directory to find with
+ * @param {string} path - path to object
+ * @returns {object} - a directory or a value
+ */
+function storeAt(dir, path, value) {
+    if (typeof dir == 'undefined') throw "unexpected error - given a bad object for looking-up?";
+    if (path === '') return;  // a directory exists. do nothing
+    let idx = path.indexOf('/') + 1;
+    if (idx === 0) {
+        // OK, store value just where
+        dir[path] = value;
+        return;  // never going down!
+    }
+
+    let dirname = path.substring(0, idx);
+    if (typeof dir[dirname] === 'undefined') {
+        // we build the path for user
+        if (dirname.endsWith('[]/')) {
+            dir[dirname] = [];
+        } else if (dirname.endsWith('/')) {
+            dir[dirname] = {};
+        }
+    }
+    return storeAt(dir[dirname], path.substring(idx), value);
+}
+
 
 //////  Load Part  //////
 
@@ -52,16 +93,7 @@ function loadFile2Global(mapfile, rawfile) {
     // create a pair of file access
     let task_pair = [getJSON(mapfile), Buffer.fromURL(rawfile)];
     // wait for both of then to be done and return a `Promise`
-    return Promise.all(task_pair).then(pair => new Promise((resolve, reject) => {
-        if (pair && pair.length == 2) {
-            load2Global(pair[0], pair[1]);
-            resolve();
-        } else {
-            reject(new Error("Bad pair of mapfile & rawfile"));
-        }
-    })).catch(error => {
-        reject(error);
-    });
+    return Promise.all(task_pair).then(pair => load2Global(pair[0], pair[1]));
 }
 
 
@@ -134,10 +166,10 @@ function _loadValue(v, buf) {
     {
         case 'tensor':
             return Tensor.load(v, buf);
-        // case 'int32array':
-        //     return 
+        case 'images':
+            return ImageBuffer.load(v, buf);
         default:
-            throw "Undefined type";
+            return Buffer.load(v, buf);
     }
 }
 
@@ -177,19 +209,29 @@ function _saveDir(dir, maplist, buf) {
             _saveDir(dir[name], packet.nodes, buf);
         } else {
             packet = _saveValue(dir[name], buf);
+            packet.name = name;  // override name
         }
         maplist.push(packet);
     }
 }
 
 function _saveValue(value, buf) {
+    // we use the simple way at present. 
     return value.save(buf)
+}
+
+
+// never use arrow function here!!!
+Object.getPrototypeOf(Int8Array.prototype).save = function(buf) {
+    // really ... hacking ways
+    buf.write(this);
+    return {type: getNativeType(this), name: this.name, length: this.length};
 }
 
 
 export { 
     globals,
-    fetch, fetchFrom,
+    fetch, fetchFrom, store, storeAt,
     loadFile2Global, batchLoadFile2Global,
     saveGlobal, saveDict
 };

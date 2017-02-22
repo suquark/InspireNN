@@ -1,44 +1,46 @@
-function clip_pixel(x) {
-    if (x > 1) return 255;
-    else if (x < -1) return 0;
-    else return 255 * (x + 1.0) / 2.0;
-}
+import { clip_pixel } from 'backend/ops.js';
 
-function getPixel(A, x, y, d) {
-    return A.w[((A.sx * y) + x) * A.depth + d];
-}
-
-function Tensor2CanvasImage(canvas, A, scale = 1, alpha=255) {
-    var s = scale;
-    var W = A.sx * s;
-    var H = A.sy * s;
-
-    var ctx = canvas.getContext('2d');
-    var g = ctx.createImageData(W, H);
-    for (var d = 0; d < 3; d++) {
-        for (var x = 0; x < A.sx; x++) {
-            for (var y = 0; y < A.sy; y++) {
-                var dval = clip_pixel(getPixel(A, x, y, d));
-                for (var dx = 0; dx < s; dx++) {
-                    for (var dy = 0; dy < s; dy++) {
-                        var pp = ((W * (y * s + dy)) + (dx + x * s)) * 4;
-                        g.data[pp + d] = dval;
-                        if (d === 0) g.data[pp + 3] = alpha; // alpha channel
-                    }
-                }
-            }
+function Tensor2RawData(rawpixels, t, alpha=255) {
+    // rgba
+    let offset = 0;  // for tensor
+    let pointer = 0; // for rawpixels
+    t = t.clone();  // dont disturb origin data
+    clip_pixel(t);
+    let w = t.w;
+    if (t.depth == 1) {
+        while (offset < t.size) {
+            rawpixels[pointer] = rawpixels[pointer + 1] = rawpixels[pointer + 2] = w[offset];
+            rawpixels[pointer + 3] = alpha;
+            pointer += 4;
+            offset += 1;
+        }
+    } else if (t.depth == 3) {
+        while (offset < t.size) {
+            rawpixels[pointer] = w[offset];
+            rawpixels[pointer + 1] = w[offset + 1];
+            rawpixels[pointer + 2] = w[offset + 2];
+            rawpixels[pointer + 3] = alpha;
+            pointer += 4;
+            offset += 3;
         }
     }
+}
+
+function Tensor2CanvasImage(canvas, A, alpha=255) {
+    var W = A.sx;
+    var H = A.sy;
+    var depth = A.depth;
+    var ctx = canvas.getContext('2d');
+    var g = ctx.createImageData(W, H);
+    Tensor2RawData(g.data, A, alpha);
     ctx.putImageData(g, 0, 0);
 }
 
-function Tensor2CanvasWithImage(A, scale = 1, alpha=255) {
+function Tensor2CanvasWithImage(A, alpha=255) {
     var canv = document.createElement('canvas');
-    var W = A.sx * scale;
-    var H = A.sy * scale;
-    canv.width = W;
-    canv.height = H;
-    Tensor2CanvasImage(canv, A, scale, alpha);
+    canv.width = A.sx;
+    canv.height = A.sy;
+    Tensor2CanvasImage(canv, A, alpha);
     return canv;
 }
 
