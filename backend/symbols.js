@@ -85,7 +85,7 @@ function storeAt(dir, path, value) {
 //////  Load Part  //////
 
 function batchLoadFile2Global(pairs, callback) {
-    return Promise.all(pairs.map(p => loadFile2Global(p[0], p[1])));
+    return Promise.all(pairs.map(([mapfile, rawfile]) => loadFile2Global(mapfile, rawfile)));
 }
 
 
@@ -93,7 +93,7 @@ function loadFile2Global(mapfile, rawfile) {
     // create a pair of file access
     let task_pair = [getJSON(mapfile), Buffer.fromURL(rawfile)];
     // wait for both of then to be done and return a `Promise`
-    return Promise.all(task_pair).then(pair => load2Global(pair[0], pair[1]));
+    return Promise.all(task_pair).then(([json, buf]) => load2Global(json, buf));
 }
 
 
@@ -114,8 +114,7 @@ function load2Global(map, buf) {
  * @param { Buffer } buf - The Buffer contains data
  */
 function _loadDir(dir, map, buf) {
-    for (let i in map) {
-        let item = map[i];
+    for (let item of map) {
         let name = item.name;
         if (name.endsWith('[]/')) {
             dir[name] = [];
@@ -137,8 +136,7 @@ function _loadDir(dir, map, buf) {
  * @param { BufferReader } buf - The ArrayBuffer contains data
  */
 function _loadList(list, map, buf) {
-    for (let i in map) {
-        let item = map[i];
+    for (let item of map) {
         let name = item.name;
         if (name.endsWith('[]/')) {
             let l = [];
@@ -168,6 +166,8 @@ function _loadValue(v, buf) {
             return Tensor.load(v, buf);
         case 'images':
             return ImageBuffer.load(v, buf);
+        case 'json':
+            return v.content;
         default:
             return Buffer.load(v, buf);
     }
@@ -208,26 +208,29 @@ function _saveDir(dir, maplist, buf) {
             packet = { name: name, nodes: [] };
             _saveDir(dir[name], packet.nodes, buf);
         } else {
-            packet = _saveValue(dir[name], buf);
+            // We attach save() method to all objects...
+            packet = dir[name].save(buf);
             packet.name = name;  // override name
         }
         maplist.push(packet);
     }
 }
 
-function _saveValue(value, buf) {
-    // we use the simple way at present. 
-    return value.save(buf)
-}
 
-
-// never use arrow function here!!!
-Object.getPrototypeOf(Int8Array.prototype).save = function(buf) {
+// never should we use arrow function here!!!
+Object.getPrototypeOf(Int8Array.prototype).__save__ = function(buf) {
     // really ... hacking ways
-    buf.write(this);
+    buf.write(this.slice().buffer);
     return {type: getNativeType(this), name: this.name, length: this.length};
 }
 
+
+ArrayBuffer.prototype.__save__ = function(buf) { 
+    buf.write(this);
+    return { name: this.name, type:'ArrayBuffer', byteLength:this.byteLength }; 
+}
+
+Object.prototype.__save__ = function() { return  { name: this.name, type:'json', content: this }; }
 
 export { 
     globals,

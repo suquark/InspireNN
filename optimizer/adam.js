@@ -19,6 +19,7 @@ class Adam extends grad_optimizer {
         super(len, opt);
         this.k = 0;
         this.learning_rate = getopt(opt, 'learning_rate', 0.01);
+        this.lr_decay = getopt(opt, 'lr_decay', 0);
         this.beta1 = getopt(opt, 'beta1', 0.9);
         this.beta2 = getopt(opt, 'beta2', 0.999);
         this.v = zeros(len);
@@ -28,8 +29,8 @@ class Adam extends grad_optimizer {
     update(x, g) {
         ++this.k; // k > 0, or 1 / biasCorr will be NaN
         let v = this.v, w = this.w;
-        let lr = this.learning_rate;
         let k = this.k;
+        let lr = this.lr_decay > 0 ? this.learning_rate / (1 + this.lr_decay * k) : this.learning_rate;
         let beta1 = this.beta1, beta2 = this.beta2;
         /**
          * initialization bias correction terms, 

@@ -1,13 +1,6 @@
-import {
-    getopt,
-    randi,
-    randf,
-    sample_from_dist,
-    sample,
-    random_replace,
-    one_hot,
-    AvgWindow
-} from 'util.js';
+import { getopt, AvgWindow } from 'util.js';
+import { randi, randf, sample_from_dist, sample, random_replace } from 'util/random.js';
+import { one_hot } from 'util/array.js';
 
 import { Vol } from 'vol.js';
 

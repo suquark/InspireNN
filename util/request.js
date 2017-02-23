@@ -5,9 +5,9 @@
 
 function getJSON(url, async=true) {
     if (async)
-        return getText(url, "application/json").then(json => JSON.parse(json));
+        return getText(url, "application/json").then(JSON.parse);
     else
-        return JSON.parse(getTextSync(url, "application/json", false));
+        return JSON.parse(getText(url, "application/json", false));
 }
 
 function getBinary(url) {

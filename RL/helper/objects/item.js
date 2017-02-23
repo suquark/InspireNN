@@ -1,4 +1,4 @@
-import { randf, randi } from 'util.js';
+import { randf, randi } from 'util/random.js';
 import { Circle, Line, Vec } from '../geometry.js';
     
 class Item {

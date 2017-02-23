@@ -61,7 +61,7 @@ class ImageBuffer {
         return ib;
     }
 
-    save(buf) {
+    __save__(buf) {
         for (let i of this.images) buf.write(i);
         return {name: this.name, shape: this.shape, count: this.images.length, type: 'images'};
     }

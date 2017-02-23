@@ -3,11 +3,7 @@ import { checkTypeStrict } from 'util/assert.js';
 
 // FIXME: not very efficient
 function bufCopy(dst, src, start=0) {
-    let b_out = new Int8Array(dst), b_in = new Int8Array(src);
-    let N = b_in.byteLength;
-    for (let i = 0; i < N; i++) {
-        b_out[i + start] = b_in[i];
-    }
+    new Uint8Array(dst).set(new Uint8Array(src), start);
 }
 
 class Buffer {
@@ -16,73 +12,57 @@ class Buffer {
         this.offset = 0;
     }
 
-    align(len) {
-        let new_offset = Math.ceil(this.offset / len) | 0;
-        this.offset = new_offset * len;
-        return this.offset;
+    _read(TypedArr, count) {
+        let W = TypedArr.BYTES_PER_ELEMENT;
+        // assume that W is 2^k, so we can do align faster with bitwise ops
+        if (this.offset & (W - 1)) this.offset = (this.offset & W) + W;
+        let v = new TypedArr(this.buffer, this.offset, count);
+        this.offset += W * count;
+        return v;
     }
 
     read(count, type) {
-        var value;
         switch (type) {
             case 'Uint8Array':
-                value = new Uint8Array(this.buffer, this.offset, count);
-                this.offset += count;
-                break;
+                return this._read(Uint8Array, count);
             case 'Uint8ClampedArray':
-                value = new Uint8ClampedArray(this.buffer, this.offset, count);
-                this.offset += count;
-                break;
+                return this._read(Uint8ClampedArray, count);
             case 'Int8Array':
-                value = new Int8Array(this.buffer, this.offset, count);
-                this.offset += count;
-                break;
+                return this._read(Int8Array, count);
             case 'Uint16Array':
-                value = new Uint16Array(this.buffer, this.align(2), count);
-                this.offset += 2 * count;
-                break;
+                return this._read(Uint16Array, count);
             case 'Int16Array':
-                value = new Int16Array(this.buffer, this.align(2), count);
-                this.offset += 2 * count;
-                break;
+                return this._read(Int16Array, count);
             case 'Uint32Array':
-                value = new Uint32Array(this.buffer, this.align(4), count);
-                this.offset += 4 * count;
-                break;
+                return this._read(Uint32Array, count);
             case 'Int32Array':
-                value = new Int32Array(this.buffer, this.align(4), count);
-                this.offset += 4 * count;
-                break;
+                return this._read(Int32Array, count);
             case 'Float32Array':
-                value = new Float32Array(this.buffer, this.align(4), count);
-                this.offset += 4 * count;
-                break;
+                return this._read(Float32Array, count);
             case 'Float64Array':
-                value = new Float32Array(this.buffer, this.align(8), count);
-                this.offset += 8 * count;
-                break;
+                return this._read(Float64Array, count);
             default:
                 throw 'unexpected type';
         }
-        return value;
     }
 
     /**
      * Alloc new space at overflow
      */
-    _refit(length) {
-        // FIXME: not very efficient. 
-        length = 1 << Math.ceil(Math.log2(length) + 0.5);
-        let buf_new = new ArrayBuffer(length);
-        bufCopy(buf_new, this.buffer);
-        this.buffer = buf_new;
+    _check_fit(length) {
+        if (length > this.byteLength) {
+            length = 1 << Math.ceil(Math.log2(length) + 0.5);
+            let buf_new = new ArrayBuffer(length);
+            bufCopy(buf_new, this.buffer);
+            this.buffer = buf_new;
+        }
     }
 
+    /**
+     * @param { ArrayBuffer } buffer
+     */
     write(buffer) {
-        if (!checkTypeStrict(buffer, 'ArrayBuffer')) buffer = buffer.slice().buffer;
-        if (this.offset + buffer.byteLength > this.byteLength) {
-            this._refit(this.offset + buffer.byteLength);
-        }
+        this._check_fit(this.offset + buffer.byteLength);
         bufCopy(this.buffer, buffer, this.offset);
         this.offset += buffer.byteLength;  // update offset
     }
@@ -97,10 +77,11 @@ class Buffer {
 
     // Try to load typed array
     static load(v, buf) {
-        return buf.read(v.length, v.type);
+        if (v.type === 'ArrayBuffer') 
+            return buf.read(v.byteLength, Uint8Array).buffer;
+        else
+            return buf.read(v.length, v.type);
     }
-
-    //getNativeType
 
     static fromURL(url) {
         return getBinary(url).then(buf => new Buffer(buf));
