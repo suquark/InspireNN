@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Regression Demo</title>
+
+    <script src="../../transpiler/system.js"></script>
+    <script src="../sysconf.js"></script>
+
+    <script src="../../visualize/jquery.min.js"></script>
+
+    <link rel="stylesheet" href="../../visualize/materialize/css/materialize.min.css" />
+    <link rel="stylesheet" href="../../visualize/materialize/css/material_icons.css" />
+    <script src="../../visualize/materialize/js/materialize.min.js"></script>
+
+    <script src="../../visualize/d3.min.js"></script>
+    <script src="../../visualize/d3-interpolate-path.js"></script>
+
+    <style>
+        path {
+            stroke: #0bb;
+            stroke-width: 1.5px;
+            fill: none;
+        }
+        /* Special styling for WebKit/Blink */
+        
+        input[type=range]::-webkit-slider-thumb {
+            background: skyblue;
+        }
+        /* All the same stuff for Firefox */
+        
+        input[type=range]::-moz-range-thumb {
+            background: skyblue;
+        }
+        /* All the same stuff for IE */
+        
+        input[type=range]::-ms-thumb {
+            background: skyblue;
+        }
+        /***** These are to edit the thumb and the text inside the thumb *****/
+        
+        input[type=range]+.thumb {
+            background-color: skyblue;
+        }
+        
+        input[type=range]+.thumb.active .value {
+            color: white;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="row">
+
+            <h1>Regression Demo</h1>
+            <p style="font-style: italic;">Last modified at 2017-02-25</p>
+            <blockquote>
+                This is a regression where a neural network tried to match the given data points<br> The ground truth curve is also given<br>
+            </blockquote>
+
+            <div id="testbox" class="col s12"></div>
+
+            <div class="col s12" style="margin-bottom: 10px">
+                <a id="play_control" class="btn-floating waves-effect waves-light blue" style="margin-right: 5px">
+                    <i id="play_icon" class="material-icons">pause</i>
+                </a>
+
+                <a id="reload" class="btn-floating waves-effect waves-light green">
+                    <i class="material-icons">refresh</i>
+                </a>
+            </div>
+
+            <div class="col s12">
+                <table class="highlight">
+                    <thead>
+                        <tr>
+                            <th data-field="">Epoch</th>
+                            <th data-field="">Loss</th>
+                            <th data-field="">Average epoch time</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr>
+                            <td id="iters">-</td>
+                            <td id="avloss">-</td>
+                            <td id="avtime">-</td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="col s12">
+                <p id="complexity-text"> complexity = 2 </p>
+
+                <p class="range-field">
+                    <input type="range" id="complexity" min="1" max="10" step="1" value="2" />
+                </p>
+
+                <p id="traindata_size-text"> # of data points = 50 </p>
+                <p class="range-field">
+                    <input type="range" id="traindata_size" min="1" max="250" step="1" value="50" />
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="text/javascript">
+        SystemJS.import('./demo.js');
+    </script>
+</body>
+
+</html>

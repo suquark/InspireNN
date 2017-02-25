@@ -208,8 +208,13 @@ function _saveDir(dir, maplist, buf) {
             packet = { name: name, nodes: [] };
             _saveDir(dir[name], packet.nodes, buf);
         } else {
-            // We attach save() method to all objects...
-            packet = dir[name].save(buf);
+            // We attach __save__() method to all objects...
+            if (dir[name].__save__){
+                packet = dir[name].__save__(buf);
+            } else {
+                // objects
+                packet = { type:'json', content: dir[name] }
+            }
             packet.name = name;  // override name
         }
         maplist.push(packet);
@@ -222,15 +227,13 @@ Object.getPrototypeOf(Int8Array.prototype).__save__ = function(buf) {
     // really ... hacking ways
     buf.write(this.slice().buffer);
     return {type: getNativeType(this), name: this.name, length: this.length};
-}
+};
 
 
 ArrayBuffer.prototype.__save__ = function(buf) { 
     buf.write(this);
     return { name: this.name, type:'ArrayBuffer', byteLength:this.byteLength }; 
-}
-
-Object.prototype.__save__ = function() { return  { name: this.name, type:'json', content: this }; }
+};
 
 export { 
     globals,

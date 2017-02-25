@@ -1,7 +1,7 @@
 /**
  *  Random number utilities
  */
-
+import { zeros } from 'util/array.js';
 
 var return_v = false;
 var v_val = 0.0;
@@ -80,6 +80,22 @@ function sample(a) {
 }
 
 /**
+ * randomly pick N items from a given function by uniform random
+ * @param { Function } f - given array
+ */
+function sampleFunctionUniform(f, N, floor, ceil) {
+    var data = zeros(N);
+    var labels = zeros(N);
+    for (let i = 0; i < N; i++) {
+        let x = randf(floor, ceil);
+        let y = f(x);
+        data[i] = x;
+        labels[i] = y;
+    }
+    return [data, labels];
+}
+
+/**
  * randomly replace an item from a given array
  * @param { Array } a - given array
  * @param { Object } v - given item
@@ -107,5 +123,6 @@ function weightedSample(lst, probs) {
 
 
 export { randi, randf, randn, randn2d, gaussRandom };
-export { sample, sample_from_dist, weightedSample, random_replace };
+export { sample, sample_from_dist, weightedSample, sampleFunctionUniform };
+export { random_replace };
 export { shuffle, randperm };

@@ -1,8 +1,8 @@
-import { assert, checkClass, isArray } from 'util/assert.js';
+import { assert, isArray } from 'util/assert.js';
 import { zeros } from 'util/array.js';
 
 class Tensor {
-    constructor(shape=[null], rawdata=undefined) {
+    constructor(shape = [null], rawdata = undefined) {
         this._shape = shape;
         this._size = 1;
         let vacant = -1;
@@ -12,7 +12,7 @@ class Tensor {
                 assert(vacant <= 0, 'A tensor can have at most 1 dim of arbitary length.');
                 vacant = i;
             } else {
-                assert(n > 0, 'Length of a specified dim should be positive.');                
+                assert(n > 0, 'Length of a specified dim should be positive.');
                 assert(Math.floor(n) == n, 'Length of a specified dim should be an interger.');
                 this._size *= n;
             }
@@ -37,6 +37,9 @@ class Tensor {
 
         // turn into native
         this.w = typeof rawdata !== 'undefined' ? Float32Array.from(rawdata) : zeros(this._size);
+
+        // TODO: optimize it out
+        this.dw = this.w.slice();
     }
 
     get buffer() {
@@ -77,19 +80,21 @@ class Tensor {
     }
 
     axis(idx) {
-        return idx >= 0 ? this.shape[idx] : this.shape[this.ndim + idx]; 
+        return idx >= 0 ? this.shape[idx] : this.shape[this.ndim + idx];
     }
 
     get max() {
         let limit = this.size;
-        let amax = this.w[0], w = this.w;
+        let amax = this.w[0],
+            w = this.w;
         for (let i = 1; i < limit; i++) {
-            if(w[i] > amax) amax = w[i];
+            if (w[i] > amax) amax = w[i];
         }
         return amax;
     }
 
     get softmax() {
+        let N = this.size;
         let es = zeros(N);
         this.softmax_a(es);
         return es;
@@ -111,13 +116,12 @@ class Tensor {
         for (let i = 0; i < N; i++) es[i] /= esum;
     }
 
-    get max_index() {  
-        let limit = this.size;   
+    get max_index() {
+        let limit = this.size;
         let amax = this.w[0];
         let idx = 0;
         for (let i = 1; i < limit; i++) {
-            if (this.w[i] > amax) 
-            {
+            if (this.w[i] > amax) {
                 idx = i;
                 amax = this.w[i];
             }
@@ -130,7 +134,7 @@ class Tensor {
             this.dw[i] /= batch_size;
         }
     }
-    
+
     cloneAndZero() { return new Tensor(this.shape); }
 
     clone() {
@@ -141,9 +145,16 @@ class Tensor {
         return zeros(this.size);
     }
 
-    save(buf) {
+    static fromNumber(value) {
+        return new Tensor([1], [value]);
+    }
+
+    /**
+     * Save tensor. Interface implement.
+     */
+    __save__(buf) {
         buf.write(this.w);
-        return {name: this.name, shape: this.shape, type: 'tensor'};
+        return { name: this.name, shape: this.shape, type: 'tensor' };
     }
 
     /**
@@ -161,7 +172,7 @@ class Tensor {
         t.name = map.name;
         return t;
     }
-    
+
 }
 
 class Vector extends Tensor {
@@ -171,7 +182,7 @@ class Vector extends Tensor {
 }
 
 class Placeholder {
-    constructor(shape=[null]) {
+    constructor(shape = [null]) {
         this._shape = shape;
         this._size = 1;
     }

@@ -5,6 +5,7 @@ class AvgWindow {
     constructor(size=100, minsize=20) {
         this.v = [];
         this.sum = 0;
+        this.size = size;
     }
     add(x) {
         this.push(x);
