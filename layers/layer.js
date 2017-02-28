@@ -1,9 +1,9 @@
-import get_optimizer from 'optimizer/index.js';  // the default function
+import get_optimizer from 'optimizer.js'; // the default function
 import { Regularization } from 'regularization.js';
 import { getopt } from 'util.js'
 
 class Layer {
-    constructor(layer_type, opt={}) {
+    constructor(layer_type, opt = {}) {
         this.name = opt.name;
         // computed
         this.out_sx = opt.in_sx;
@@ -25,14 +25,14 @@ class Layer {
             if (V.allow_regl) V.regularizer = new Regularization(options.l2_decay, options.l1_decay, this.l2_decay_mul, this.l1_decay_mul);
         });
     }
-    
+
     forward(V, is_training) {
         this.in_act = V;
         this.out_act = V; // nothing to do, output raw scores
         return V;
     }
 
-    backward() { }
+    backward() {}
 
     toJSON() {
         var json = {};
@@ -57,20 +57,31 @@ class Layer {
     }
 
     createOutput() {
-        return new Array(this.out_sx*this.out_sy*this.out_depth).fill(0.);
+        return new Array(this.out_sx * this.out_sy * this.out_depth).fill(0.);
     }
 }
 
 class InputLayer extends Layer {
-    constructor(opt) { 
+    constructor(opt) {
         super('input', opt);
-         // required: depth
-        this.out_depth = getopt(opt, ['out_depth', 'depth'], 0);
+        // TODO: for compactibility, will turn into style suitable for tensor later
+        if (opt.shape) {
+            this.input_shape = opt.shape;
+            // too bad :(  
+            if (opt.shape.length == 3) {
+                [this.out_sy, this.out_sx, this.out_depth] = opt.shape;
+            } else if (opt.shape.length == 1) {
+                [this.out_sy, this.out_sx, this.out_depth] = [1, 1, opt.shape[0]];
+            }
+        } else { // old-styles, remove in the future
+            // required: depth
+            this.out_depth = getopt(opt, ['out_depth', 'depth'], 0);
 
-        // optional: default these dimensions to 1
-        this.out_sx = getopt(opt, ['out_sx', 'sx', 'width'], 1);
-        this.out_sy = getopt(opt, ['out_sy', 'sy', 'height'], 1);
+            // optional: default these dimensions to 1
+            this.out_sx = getopt(opt, ['out_sx', 'sx', 'width'], 1);
+            this.out_sy = getopt(opt, ['out_sy', 'sy', 'height'], 1);
+        }
     }
 }
 
-export {Layer, InputLayer};
+export { Layer, InputLayer };

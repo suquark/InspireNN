@@ -19,29 +19,35 @@ const batch_size = 32,
 
 /* net */
 
-var net = new Sequential();
-net.makeLayers([
-    { type: 'input', out_sx: 1, out_sy: 1, out_depth: 1 },
-    { type: 'fc', num_neurons: 20 },
-    'lrelu',
-    { type: 'fc', num_neurons: 20 },
-    'lrelu',
-    { type: 'fc', num_neurons: 20 },
-    'sigmoid',
-    { type: 'fc', num_neurons: 1 }
-]);
+var net, net_f, trainer;
 
-var trainer = new Trainer(net, {
-    learning_rate: 0.001,
-    lr_decay: 0,
-    method: 'adam',
-    loss: 'mse',
-    batch_size: batch_size,
-    l2_decay: 0.001
-});
+function gen_net() {
+    net = new Sequential([
+        { type: 'input', shape: [1] },
+        { type: 'fc', num_neurons: 20 },
+        'elu',
+        { type: 'fc', num_neurons: 20 },
+        'lrelu',
+        { type: 'fc', num_neurons: 20 },
+        'sigmoid',
+        { type: 'fc', num_neurons: 1 }
+    ]);
 
 
-var net_f = x => net.forward(Tensor.fromNumber(x)).w[0];
+    net_f = x => net.forward(Tensor.fromNumber(x)).toNumber();
+
+    trainer = new Trainer(net, {
+        learning_rate: 0.001,
+        lr_decay: 0,
+        method: 'adam',
+        loss: 'mse',
+        batch_size: batch_size,
+        l2_decay: 0.001
+    });
+}
+
+
+
 
 /* input */
 
@@ -105,28 +111,32 @@ function gen_func(vari = 1) {
         return r;
     };
 
+    // set drawing boundary by targetf
     plot.setSpan(targetf, 800, 400);
+    // Plot groundTruth
     groundTruthPlot.draw(targetf);
 }
 
 
 function gen_data(N) {
     var pairs = sampleFunctionUniform(targetf, N, -5, 5);
-    var [data, labels] = pairs;
-
-    // preprocess data
-    data = Array.from(data).map(Tensor.fromNumber);
-    labels = Array.from(labels).map(Tensor.fromNumber);
-    batch = new Batch(data, labels, batch_size);
-
+    gen_batch(...pairs);
     var points = zip(pairs).map(([x, y]) => ({ x: x, y: y }));
     regressionPlot.accurate = Math.max(100, N * 2);
     plot.drawPoints(points);
 }
 
+function gen_batch(data, labels) {
+    // preprocess data
+    data = Array.from(data).map(Tensor.fromNumber);
+    labels = Array.from(labels).map(Tensor.fromNumber);
+    batch = new Batch(data, labels, batch_size);
+}
+
 function reload() {
     gen_func(complexity.value | 0);
     gen_data(traindata_size.value | 0);
+    gen_net();
 }
 
 /* record */
@@ -145,16 +155,19 @@ var steps = 0;
 
 function update() {
     ++steps;
+    // train
     for (let iters = 0; iters < epoch; iters++) {
         let stats = trainer.trainBatch(...batch.nextBatch());
         loss_record.push(stats.loss);
         time_record.push(stats.batch_time);
     }
+    // update record
     if (steps % 5 == 0) {
         iterstext.text(`${steps}`);
         avlosstext.text(`${loss_record.average.toExponential(3)}`);
         avtimetext.text(`${(time_record.average * epoch).toFixed(3)} ms`);
     }
+    // redraw network as an function
     regressionPlot.draw(net_f);
 }
 

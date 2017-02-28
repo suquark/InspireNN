@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Dataset Demo</title>
+
+    <script src="../../transpiler/system.js"></script>
+    <script src="../sysconf.js"></script>
+
+    <script src="../../visualize/jquery.min.js"></script>
+    <script src="../../visualize/preload-mask.js"></script>
+
+    <link rel="stylesheet" href="../../visualize/materialize/css/materialize.min.css" />
+    <link rel="stylesheet" href="../../visualize/materialize/css/material_icons.css" />
+    <script src="../../visualize/materialize/js/materialize.min.js"></script>
+
+
+    <script src="../../visualize/d3.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class='row'>
+            <div class='col s12'>
+                <h1>Dataset Demo - MNIST</h1>
+                <blockquote>
+                    This demo illustrated about
+                </blockquote>
+            </div>
+            <div class='col s12' id="testbox"></div>
+        </div>
+    </div>
+</body>
+
+<script type="text/javascript">
+    set_preload_mask();
+    var testbox = document.getElementById("testbox");
+    SystemJS.import('./demo.js').then(demo => demo.init()).then(print => {
+        print(testbox);
+        disable_preload_mask();
+
+        $('.tooltipped').tooltip({
+            delay: 50
+        });
+    });
+    // $(document).ready(function() {
+
+    // });
+</script>
+
+<script type="text/javascript" color="120,190,250" opacity="0.9" count="500" src="canvas-nest.min.js"></script>
+
+</html>

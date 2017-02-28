@@ -63,6 +63,10 @@ class Vol {
         this.dw[ix] += v;
     }
 
+    toNumber() {
+        return this.w[0];
+    }
+
     get max() {
         let limit = this.size;
         let amax = this.w[0];

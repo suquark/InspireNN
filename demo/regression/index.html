@@ -15,8 +15,16 @@
     <link rel="stylesheet" href="../../visualize/materialize/css/material_icons.css" />
     <script src="../../visualize/materialize/js/materialize.min.js"></script>
 
+    <script src="../../visualize/preload-mask.js"></script>
+
     <script src="../../visualize/d3.min.js"></script>
     <script src="../../visualize/d3-interpolate-path.js"></script>
+
+
+    <link rel="stylesheet" href="../../visualize/prism/prism.css" />
+    <script src="../../visualize/prism/prism.js"></script>
+
+
 
     <style>
         path {
@@ -48,6 +56,10 @@
         input[type=range]+.thumb.active .value {
             color: white;
         }
+        
+        section {
+            margin-top: 40px;
+        }
     </style>
 
 </head>
@@ -59,6 +71,7 @@
 
             <h1>Regression Demo</h1>
             <p style="font-style: italic;">Last modified at 2017-02-25</p>
+            <iframe src="https://ghbtns.com/github-btn.html?user=suquark&repo=ConvNetJS6&type=star&count=true&size=large" frameborder="0" scrolling="0" width="160px" height="30px"></iframe>
             <blockquote>
                 This is a regression where a neural network tried to match the given data points<br> The ground truth curve is also given<br>
             </blockquote>
@@ -66,11 +79,11 @@
             <div id="testbox" class="col s12"></div>
 
             <div class="col s12" style="margin-bottom: 10px">
-                <a id="play_control" class="btn-floating waves-effect waves-light blue" style="margin-right: 5px">
+                <a id="play_control" class="tooltipped btn-floating waves-effect waves-light blue" data-position="left" data-delay="50" data-tooltip="Play/Pause" style="margin-right: 5px">
                     <i id="play_icon" class="material-icons">pause</i>
                 </a>
 
-                <a id="reload" class="btn-floating waves-effect waves-light green">
+                <a id="reload" class="tooltipped btn-floating waves-effect waves-light green" data-position="right" data-delay="50" data-tooltip="Refresh">
                     <i class="material-icons">refresh</i>
                 </a>
             </div>
@@ -110,11 +123,278 @@
             </div>
         </div>
 
-    </div>
+        <div class="col s12 m9 l10">
 
-    <script type="text/javascript">
-        SystemJS.import('./demo.js');
-    </script>
+            <div id="introduction" class="section scrollspy">
+                <h4></h4>
+
+                <p class="caption"></p>
+
+
+            </div>
+
+        </div>
+
+        <article class="col s12 m9 l10">
+            <h4>下面是关于如何使用此框架构建这个完整的 demo 的介绍</h4>
+
+            <section>
+                <h5>设置常量</h5>
+                <p>
+                    <code>batch_size</code>用于表示每训练多少次进行一次优化更新，
+                    <code>epoch</code>表示多少<code>batch_size</code>后刷新显示状态
+                </p>
+                <pre class="line-numbers language-javascript"><code>
+                    const batch_size = 32, epoch = 5;
+                </code></pre>
+            </section>
+            <br>
+            <section>
+                <h5>创建神经网络</h5>
+                <p>
+                    下面的寥寥几行代码就创建了一个3隐藏层的神经网络，这比用numpy/matlab之类的方便的多
+
+                </p>
+                <pre class="line-numbers language-javascript"><code>
+                    var net = new Sequential([
+                        { type: 'input', shape: [1] },
+                        { type: 'fc', num_neurons: 20 },
+                        'lrelu',
+                        { type: 'fc', num_neurons: 20 },
+                        'lrelu',
+                        { type: 'fc', num_neurons: 20 },
+                        'elu',
+                        { type: 'fc', num_neurons: 1 }
+                    ]);
+                </code></pre>
+            </section>
+
+            <section>
+                <h5>获得神经网络的函数闭包</h5>
+                <p>
+                    一行代码就可以把这个神经网络变成 <code>number → number</code> 的函数
+                </p>
+                <pre class="line-numbers language-javascript"><code>
+                    var net_f = x => net.forward(Tensor.fromNumber(x)).toNumber();
+                </code></pre>
+            </section>
+
+            <section>
+                <h5>为神经网络创建一个训练器</h5>
+                <p>
+                    同样几行就可以了
+                </p>
+                <pre class="line-numbers language-javascript">
+                <code>
+                var trainer = new Trainer(net, {
+                        learning_rate: 0.001, // 学习率
+                        lr_decay: 0,          // 学习率不会下降
+                        method: 'adam',       // 使用 adam 优化器
+                        loss: 'mse',          // 使用均方损失函数
+                        batch_size: batch_size, // mini-batch 大小
+                        l2_decay: 0.001     // L2-regularization
+                });
+                </code></pre>
+            </section>
+
+            <section>
+                <h5>声明两个变量，用于存放等待拟合的函数以及用于训练的数据</h5>
+                <p>
+                    <code>targetf</code> 是等待拟合的函数，<code>batch</code>是管理用于训练的数据
+                </p>
+                <pre class="line-numbers language-javascript">
+                <code>
+                var targetf, batch;
+                </code></pre>
+            </section>
+
+
+            <section>
+                <h5>生成所需函数</h5>
+                <p>
+                    这里看上去代码稍多，但是完全取决于用户如何定义函数。这里使用三角函数系。<br>
+                    <code>vari</code> 决定了生成函数的频谱宽度，对应于复杂度
+                    <br> 生成的函数保存在 <code>targetf</code>
+                </p>
+                <pre class="line-numbers language-javascript">
+                <code>
+                function gen_func(vari = 1) {
+                    let A = [],
+                        phi = [],
+                        k = [];
+                    for (let i = 0; i < vari; i++) {
+                        A.push(randf(-1, 1));
+                        phi.push(randf(-2, 2));
+                        k.push(randf(-vari, vari));
+                    }
+                    targetf = function(x) {
+                        let r = 0;
+                        for (let i = 0; i < vari; i++) r += A[i] * Math.sin(k[i] * x + phi[i]);
+                        return r;
+                    };
+                    
+                    // set drawing boundary by targetf
+                    plot.setSpan(targetf, 800, 400);
+                    // plot ground truth
+                    groundTruthPlot.draw(targetf);
+                }
+                </code></pre>
+            </section>
+
+
+            <section>
+                <h5>得到数据点，生成batch，并绘制</h5>
+                <p>
+                    这里看上去代码稍多，但是完全取决于用户如何定义函数。这里使用三角函数系。<br>
+                    <code>vari</code> 决定了生成函数的频谱宽度，对应于复杂度
+                    <br> 生成的函数保存在 <code>targetf</code>
+                </p>
+                <pre class="line-numbers language-javascript">
+                <code>
+                function gen_data(N) {
+                    var pairs = sampleFunctionUniform(targetf, N, -5, 5);
+                    gen_batch(...pairs);
+                    var points = zip(pairs).map(([x, y]) => ({ x: x, y: y }));
+                    regressionPlot.accurate = Math.max(100, N * 2);
+                    plot.drawPoints(points);
+                }
+                </code></pre>
+            </section>
+
+
+            <section>
+                <h5>生成batch</h5>
+                <p>
+                    这里的一个细节是，<code>data</code> 和 <code>labels</code> 都是所谓 Typed-Array，对它们进行map要求返回数值，否则会产生 <code>NaN</code>
+                    <br> 所以我们先用<code>Array.from</code>将它们转为一般的<code>Array</code>然后再用map转为<code>Tensor</code>
+                    <br> 生成的 <code>Batch</code> 保存在 <code>batch</code>
+                </p>
+                <pre class="line-numbers language-javascript">
+                <code>
+                function gen_batch(data, labels) {
+                    // preprocess data
+                    data = Array.from(data).map(Tensor.fromNumber);
+                    labels = Array.from(labels).map(Tensor.fromNumber);
+                    batch = new Batch(data, labels, batch_size);
+                }
+                </code></pre>
+            </section>
+
+
+
+            <section>
+                <h5>重新加载</h5>
+                <p>
+                    初始化上面的东西。<code>|0</code> 的作用是把类型转为整数
+                </p>
+                <pre class="line-numbers language-javascript">
+                <code>
+                function reload() {
+                    gen_func(complexity.value | 0);
+                    gen_data(traindata_size.value | 0);
+                    gen_net();
+                }
+                </code></pre>
+            </section>
+
+            <section>
+                <h5>选择要填充数据的元素</h5>
+                <p>
+                    使用了d3js
+                </p>
+                <pre class="line-numbers language-javascript">
+                <code>
+                var avlosstext = d3.select('#avloss'),
+                    avtimetext = d3.select('#avtime'),
+                    iterstext = d3.select('#iters');
+                </code></pre>
+            </section>
+
+
+            <section>
+                <h5>创建滑动平均窗口用来统计数据</h5>
+                <pre class="line-numbers language-javascript">
+                <code>
+                var loss_record = new AvgWindow(batch_size * epoch, 1);
+                var time_record = new AvgWindow(batch_size * epoch * 10, 1);
+                </code></pre>
+            </section>
+
+            <section>
+                <h5>训练和更新</h5>
+                <p>
+                    训练，记录结果，更新内容
+                </p>
+                <pre class="line-numbers language-javascript">
+                <code>
+                /* train */
+                var steps = 0;
+
+                function update() {
+                    ++steps;
+                    // train
+                    for (let iters = 0; iters < epoch; iters++) {
+                        let stats = trainer.trainBatch(...batch.nextBatch());
+                        loss_record.push(stats.loss);
+                        time_record.push(stats.batch_time);
+                    }
+                    // update record
+                    if (steps % 5 == 0) {
+                        iterstext.text(`${steps}`);
+                        avlosstext.text(`${loss_record.average.toExponential(3)}`);
+                        avtimetext.text(`${(time_record.average * epoch).toFixed(3)} ms`);
+                    }
+                    // redraw network as an function
+                    regressionPlot.draw(net_f);
+                }
+                </code></pre>
+            </section>
+
+            <section>
+                <h5>迭代控制</h5>
+                <p>
+                    执行更新操作。 使用<code>window.requestAnimationFrame</code> 自动寻求时机，而不是<code>setTimeout</code>
+                </p>
+                <pre class="line-numbers language-javascript">
+                <code>
+                /* running control */
+
+                var conti = true;
+
+                function iterate() {
+                    update();
+                    if (!conti) return;
+                    window.requestAnimationFrame(iterate);
+                }
+                </code></pre>
+            </section>
+
+        </article>
+    </div>
 </body>
+
+<script>
+    Prism.plugins.NormalizeWhitespace.setDefaults({
+        'remove-trailing': true,
+        'remove-indent': true,
+        'left-trim': true,
+        'right-trim': true,
+        /*'break-lines': 80,
+        'indent': 2,
+        'remove-initial-line-feed': false,
+        'tabs-to-spaces': 4,
+        'spaces-to-tabs': 4*/
+    });
+</script>
+
+<script type="text/javascript">
+    set_preload_mask();
+    SystemJS.import('./demo.js').then(disable_preload_mask());
+    $(document).ready(function() {
+        $('.tooltipped').tooltip({
+            delay: 50
+        });
+    });
+</script>
 
 </html>

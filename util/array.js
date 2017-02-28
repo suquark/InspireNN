@@ -1,4 +1,3 @@
-
 /** 
  * Array utilities
  * 
@@ -11,7 +10,7 @@ function zeros(n) {
         // lacking browser support
         return new Array(n).fill(0.);
     } else {
-        return new Float32Array(n);  // typed arrays are faster
+        return new Float32Array(n); // typed arrays are faster
     }
 }
 
@@ -43,7 +42,7 @@ function array2d(n, d, s) {
  * @param { int } k - array[k] fill value
  * @param { number } value - fill array[k] with value
  */
-function one_hot(n, k, value=1) {
+function one_hot(n, k, value = 1) {
     let a = zeros(n);
     a[k] = value;
     return a;
@@ -59,17 +58,23 @@ function arrUnique(arr) {
 
 // return max and min of a given non-empty array.
 function maxmin(w) {
-    if(w.length === 0) { return {}; } // ... ;s
+    if (w.length === 0) { return {}; } // ... ;s
     var maxv = w[0];
     var minv = w[0];
     var maxi = 0;
     var mini = 0;
     var n = w.length;
     for (var i = 1; i < n; i++) {
-        if(w[i] > maxv) { maxv = w[i]; maxi = i; } 
-        if(w[i] < minv) { minv = w[i]; mini = i; } 
+        if (w[i] > maxv) {
+            maxv = w[i];
+            maxi = i;
+        }
+        if (w[i] < minv) {
+            minv = w[i];
+            mini = i;
+        }
     }
-    return {maxi: maxi, maxv: maxv, mini: mini, minv: minv, dv:maxv-minv};
+    return { maxi: maxi, maxv: maxv, mini: mini, minv: minv, dv: maxv - minv };
 }
 
 function indexOfMax(arr) {
@@ -81,7 +86,7 @@ function indexOfMax(arr) {
  */
 function L1(x1, x2) {
     let d = 0;
-    let N = x1.length;  // important! length of array not of object!
+    let N = x1.length; // important! length of array not of object!
     for (let i = 0; i < N; i++) {
         d += Math.abs(x1[i] - x2[i]);
     }
@@ -93,7 +98,7 @@ function L1(x1, x2) {
  */
 function L2(x1, x2) {
     let d = 0;
-    let N = x1.length;  // important! length of array not of object!
+    let N = x1.length; // important! length of array not of object!
     for (let i = 0; i < N; i++) {
         let dx = x1[i] - x2[i];
         d += dx * dx;
@@ -167,7 +172,7 @@ function centerPoints(arr) {
     let mean = zeros(dim);
     for (let i = 0; i < N; i++) {
         for (let d = 0; d < dim; d++) {
-            mean[d] += arr[i][d];           
+            mean[d] += arr[i][d];
         }
     }
 
@@ -181,8 +186,27 @@ function centerPoints(arr) {
 }
 
 
+function prod(arr) {
+    var N = arr.length;
+    var p = 1;
+    for (let i = 0; i < N; i++) {
+        p *= arr[i];
+    }
+    return p;
+}
+
+function sum(arr) {
+    var N = arr.length;
+    var s = 0;
+    for (let i = 0; i < N; i++) {
+        s += arr[i];
+    }
+    return s;
+}
+
 // create array
 export { zeros, zeros2d, array2d, one_hot };
+export { prod };
 // property of array
 export { maxmin, indexOfMax, arrUnique, arrContains };
 // geometry

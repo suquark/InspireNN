@@ -1,4 +1,3 @@
-import { Vol } from 'vol.js';
 import { assert } from 'util/assert.js';
 import { get_layer } from 'layers/index.js';
 
@@ -6,9 +5,10 @@ import { get_layer } from 'layers/index.js';
 // For now constraints: Simple linear order of layers, first layer input last layer a cost layer
 
 class Sequential {
-    constructor(options) {
+    constructor(defs) {
         this.layers = [];
         this.layer_map = {};
+        if (typeof defs !== 'undefined') this.makeLayers(defs);
     }
 
     // takes a list of layer definitions and creates the network layer objects
@@ -20,7 +20,7 @@ class Sequential {
         for (let i in defs) {
             if (typeof defs[i] === "string") defs[i] = { type: defs[i] };
         }
-       
+
         // relus like a bit of positive bias to get gradients early
         // otherwise it's technically possible that a relu unit will never turn on (by chance)
         // and will never get any gradient and never contribute any computation. Dead relu.
@@ -30,7 +30,7 @@ class Sequential {
                 defs[i - 1].bias_pref = 0.1;
             }
         }
-       
+
         // create the layers
         this.layers = [];
         for (let i = 0; i < defs.length; i++) {
@@ -45,24 +45,24 @@ class Sequential {
         }
 
         // naming
-        for (let i in this.layers) {
-            let l = this.layers[i];
-            if (l.name) this.layer_map[l.name] = l;
+        this.layer_map = {};
+        for (let layer of this.layers) {
+            if (layer.name) this.layer_map[layer.name] = layer;
         }
     }
 
     // forward prop the network. 
     // The trainer class passes is_training = true, but when this function is
     // called from outside (not from the trainer), it defaults to prediction mode
-    forward(V, is_training=false) {
+    forward(V, is_training = false) {
         return this.layers.reduce((input, layer) => layer.forward(input, is_training), V);
     }
-    
+
     // backprop: compute gradients wrt all parameters
     backward() {
         // reduceRight
         var N = this.layers.length;
-        for (var i = N - 1; i >= 0; i--) {  // first layer assumed input
+        for (var i = N - 1; i >= 0; i--) { // first layer assumed input
             this.layers[i].backward();
         }
     }
@@ -82,7 +82,7 @@ class Sequential {
 
     compile(options) { this.layers.forEach(function(l) { l.compile(options); }); }
 
-    toJSON() { return {'layers': this.layers.map(x => x.toJSON())}; }
+    toJSON() { return { 'layers': this.layers.map(x => x.toJSON()) }; }
 
     fromJSON(json) {
         for (let i in this.layers) {
@@ -97,5 +97,5 @@ class Sequential {
     get outputLayer() { return this.layers[this.layers.length - 1]; }
 }
 
-  
+
 export { Sequential };

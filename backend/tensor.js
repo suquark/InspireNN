@@ -1,9 +1,9 @@
 import { assert, isArray } from 'util/assert.js';
-import { zeros } from 'util/array.js';
+import { zeros, prod } from 'util/array.js';
 
 class Tensor {
     constructor(shape = [null], rawdata = undefined) {
-        this._shape = shape;
+        this._shape = Array.from(shape);
         this._size = 1;
         let vacant = -1;
         for (let i in this._shape) {
@@ -93,6 +93,10 @@ class Tensor {
         return amax;
     }
 
+    toNumber() {
+        return this.w[0];
+    }
+
     get softmax() {
         let N = this.size;
         let es = zeros(N);
@@ -164,11 +168,8 @@ class Tensor {
      * @return { Tensor } - the loaded tensor
      */
     static load(map, buf) {
-        let length = 1;
-        for (let i = 0; i < map.shape.length; i++) {
-            length *= map.shape[i];
-        }
-        let t = new Tensor(map.shape, buf.read(length, 'Float32Array'));
+        var N = prod(map.shape) | 0;
+        let t = new Tensor(map.shape, buf.read(N, 'Float32Array'));
         t.name = map.name;
         return t;
     }
