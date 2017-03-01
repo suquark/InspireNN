@@ -21,7 +21,7 @@ const batch_size = 32,
 
 var net, net_f, trainer;
 
-function gen_net() {
+function gen_net(lr = 0.001, regl = 0.001, optimizer = 'adam') {
     net = new Sequential([
         { type: 'input', shape: [1] },
         { type: 'fc', num_neurons: 20 },
@@ -37,29 +37,41 @@ function gen_net() {
     net_f = x => net.forward(Tensor.fromNumber(x)).toNumber();
 
     trainer = new Trainer(net, {
-        learning_rate: 0.001,
+        learning_rate: lr,
         lr_decay: 0,
-        method: 'adam',
+        method: optimizer,
         loss: 'mse',
         batch_size: batch_size,
-        l2_decay: 0.001
+        l2_decay: regl
     });
 }
-
-
-
 
 /* input */
 
 var complexity = d3.select("#complexity").on("input", function() {
-    d3.select("#complexity-text").text(`complexity = ${+this.value}`);
+    d3.select("#complexity-text").text(`Complexity = ${+this.value}`);
     reload();
 }).node();
+
 
 var traindata_size = d3.select('#traindata_size').on("input", function() {
     d3.select("#traindata_size-text").text(`# of data points = ${+this.value}`);
     gen_data(+this.value);
 }).node();
+
+
+var lr = $('#learning_rate').on('change', function() {
+    gen_net(+lr.value, +regl.value, optim.value);
+})[0];
+
+var regl = $('#regl').on('change', function() {
+    gen_net(+lr.value, +regl.value, optim.value);
+})[0];
+
+var optim = $('#optim').on('change', function() {
+    gen_net(+lr.value, +regl.value, optim.value);
+})[0];
+
 
 /* control */
 
@@ -77,7 +89,6 @@ d3.select("#play_control").on("click", function() {
         conti = true;
         iterate();
     }
-
 });
 
 
@@ -136,7 +147,7 @@ function gen_batch(data, labels) {
 function reload() {
     gen_func(complexity.value | 0);
     gen_data(traindata_size.value | 0);
-    gen_net();
+    gen_net(+lr.value, +regl.value, optim.value);
 }
 
 /* record */

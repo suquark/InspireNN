@@ -70,7 +70,7 @@ class Adam extends grad_optimizer {
     constructor(len, opt = {}) {
         super(len, opt);
         this.k = 0;
-        this.learning_rate = getopt(opt, 'learning_rate', 0.01);
+        this.learning_rate = getopt(opt, 'learning_rate', 0.0003);
         this.lr_decay = getopt(opt, 'lr_decay', 0);
         this.beta1 = getopt(opt, 'beta1', 0.9);
         this.beta2 = getopt(opt, 'beta2', 0.999);
@@ -152,7 +152,7 @@ class Adadelta extends grad_optimizer {
         let ro = this.ro;
         for (let j = 0; j < g.length; j++) {
             w[j] = ro * w[j] + (1 - ro) * g[j] * g[j];
-            let dx = Math.sqrt(wx[j] + eps) * g[j] / (w[j] + eps);
+            let dx = Math.sqrt(wx[j] + eps) / Math.sqrt(w[j] + eps) * g[j];
             wx[j] = ro * wx[j] + (1 - ro) * dx * dx; // yes, wx behind w by 1.
             x[j] -= lr * dx;
         }
@@ -180,7 +180,7 @@ class Adagrad extends grad_optimizer {
         let lr = this.learning_rate;
         for (let j = 0; j < g.length; j++) {
             w[j] += g[j] * g[j];
-            x[j] = -lr / Math.sqrt(w[j] + eps) * g[j];
+            x[j] -= lr / Math.sqrt(w[j] + eps) * g[j];
         }
     }
 }

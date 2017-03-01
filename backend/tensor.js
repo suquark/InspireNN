@@ -149,6 +149,10 @@ class Tensor {
         return zeros(this.size);
     }
 
+    fill(c) {
+        this.w.fill(c);
+    }
+
     static fromNumber(value) {
         return new Tensor([1], [value]);
     }
@@ -182,11 +186,6 @@ class Vector extends Tensor {
     }
 }
 
-class Placeholder {
-    constructor(shape = [null]) {
-        this._shape = shape;
-        this._size = 1;
-    }
-}
 
-export { Tensor, Vector, Placeholder };
+
+export { Tensor, Vector };

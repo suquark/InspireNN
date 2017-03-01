@@ -155,6 +155,45 @@ function TensorConstantProduct(x, c) {
     return o;
 }
 
+function radd(o, a) {
+    let N = o.size,
+        ow = o.w,
+        aw = a.w;
+    for (let i = 0; i < N; i++) {
+        ow[i] += aw[i];
+    }
+}
+
+function add(o, a, b) {
+    let N = o.size,
+        ow = o.w,
+        aw = a.w,
+        bw = b.w;
+    for (let i = 0; i < N; i++) {
+        ow[i] = aw[i] + bw[i];
+    }
+}
+
+/**
+ * Transposed dot add 
+ * o += x' * y
+ * @param { Tensor } x - Vector
+ * @param { Tensor } y - Vector
+ */
+function tdotadd(o, x, y) {
+    let N = o.size,
+        ow = o.w,
+        xw = x.w,
+        yw = y.w;
+    let KLen = y.size,
+        MLen = x.size;
+    for (let i = 0; i < MLen; i++) {
+        for (let j = 0; j < KLen; j++) {
+            ow[KLen * i + j] += xw[i] * yw[j];
+        }
+    }
+}
+
 
 function negative(x) {
     let N = x.size,
@@ -181,6 +220,9 @@ function shift(x, c) {
     }
 }
 
+function assign(o, x) {
+    o.w = x.w.slice();
+}
 
 function scale_shift(x, a, b) {
     let N = x.size,
