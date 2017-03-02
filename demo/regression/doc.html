@@ -1,0 +1,401 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Regression Demo</title>
+    <script src="../../visualize/jquery.min.js"></script>
+
+    <link rel="stylesheet" href="../../visualize/materialize/css/materialize.min.css" />
+    <link rel="stylesheet" href="../../visualize/materialize/css/material_icons.css" />
+    <script src="../../visualize/materialize/js/materialize.min.js"></script>
+    <link rel="stylesheet" href="../../visualize/prism/prism.css" />
+    <script src="../../visualize/prism/prism.js"></script>
+    <style>
+        section {
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <article class="col s12 m9 l10">
+                <h3>下面是关于如何使用此框架构建这个完整的 demo 的介绍</h3>
+
+                <a href="./index.html">转到demo，建议在桌面端打开（或者Android6+, iOS10+的native 浏览器核心）</a>
+
+                <blockquote>
+                    这个demo只是项目的冰山一角，只用到了框架中非常少的功能。
+                    <br> 这个框架的目的在于 1. 用生动的方式展示深度学习（神经网络）相关的知识
+                    <br> 2. 供用户展示（比如插在blog中）
+                    <br> 3. 能让深度学习跑在所有的设备上，只要支持一个稍微先进的浏览器（iOS10+, Android 6+原生的浏览器核心均可以）
+                    <br> 4. 可拓展（相对于ConvNetJS）
+                    <a href="https://github.com/suquark/ConvNetJS6/tree/master/demo/regression">具体代码地址</a> ，有兴趣记得star哦
+                </blockquote>
+
+                <iframe src="https://ghbtns.com/github-btn.html?user=suquark&repo=ConvNetJS6&type=star&count=true&size=large" frameborder="0" scrolling="0" width="160px" height="30px"></iframe>
+
+                <h4>Part -1 怎么玩这个 Demo</h4>
+                <section>
+                    <h5>Demo 简介</h5>
+                    <p>
+                        这个 Demo 在于让神经网络根据一部分点拟合曲线。神经网络只能“看到”图中黑色的数据点，而不是蓝色的实际曲线。
+                        <br> 它看上去又点无聊，但是却是入手深度学习的基础
+                        <br> 你可以调节曲线的复杂度(Complexity)、数据点数来查看神经网络如何对待它们（比如只有一个点）
+                        <br> Learning rate 是对优化的“强度”的一种度量，一般需要一个适中的数值（试试不同数值会怎么样？）
+                        <br> Optimizer 为优化器，不同优化器会有不同的效应，可能需要不同的 Learning rate
+                        <br> Regularization rate 会控制拟合曲线的“丰富度”（比如过2个点的应该是一个直线还是一个二次曲线？）
+                    </p>
+                </section>
+
+                <h4>Part O - 某些基础的说明</h4>
+                <section>
+                    <h5>ECMAScript6 简介</h5>
+                    <p>
+                        所谓的 Javascript (即现在几乎唯一的浏览器内可以直接运行的脚本语言，跑在几乎所有的网站上)的语言标准称为 ECMAScript5，ECMAScript6 为其下一代（相当于C++11 对 C++98）。目前桌面端主流的较新版本的浏览器（Chrome, Firefox，Safari，Edge，Opera）几乎已经 100% 支持 ECMAScript6 的功能。
+                        <br> 你在代码中看不懂的部分可能都是 ECMAScript6 的特性。
+                    </p>
+                </section>
+                <section>
+                    <h5>使用的外部库</h5>
+                    <p>
+                        <code>SystemJS</code> 用于加载ECMAScript6模块<br>
+                        <code>Traceur</code> 转译器，用于让旧的浏览器支持ECMAScript6语法<br>
+                        <code>JQuery</code> 用于基础的HTML元素操作，并且是其他一些库的依赖<br>
+                        <code>MaterializeCSS</code> Materialize 界面风格<br>
+                        <code>material_icons.css</code> Materialize 字体<br>
+                        <code>D3.js</code>数据可视化<br>
+                        <code>d3-interpolate-path</code> 函数插值的优化的动画渐变<br>
+                        <code>Prism</code>代码高亮 <br>
+                    </p>
+                </section>
+
+                <section>
+                    <h5>使用的自定义脚本</h5>
+                    <p>
+                        <code>sysconf.js</code> SystemJS自定义配置文件<br>
+                        <code>preload-mask.js</code> 内容加载前的遮罩<br>
+                    </p>
+                </section>
+
+                <section>
+                    <h5>使用的对象</h5>
+                    <pre class="line-numbers language-javascript"><code>
+                    // Sequential 为基本的神经网络模型
+                    import { Sequential } from 'topology/sequential.js';
+                    // Trainer 训练器，Batch 将训练数据分组
+                    import { Trainer, Batch } from 'trainer.js';
+                    // Tensor 张量，神经网络中的基础操作数类型
+                    import { Tensor } from 'backend/tensor.js';
+                    // randf 从正态分布中抽取数据，sampleFunctionUniform 从某个函数中均匀随机采样数据
+                    import { randf, sampleFunctionUniform } from 'util/random.js';
+                    // assert 断言检查
+                    import { assert } from 'util/assert.js';
+                    // 常用的高阶函数 zip，zip([[a, b, c], [d, e, f]) = [[a, d], [b, e], [c, f]]
+                    import { zip } from 'util/functools.js';
+                    // AvgWindow 滑动窗口平均
+                    import { AvgWindow } from 'util/record.js';
+                    // Plot1D 绘制一维函数
+                    import { Plot1D } from 'visualize/plot.js';
+                </code></pre>
+
+                </section>
+
+
+
+                <h4>Part I - 创建一个神经网络并训练它，并显示实时数据</h4>
+                <section>
+                    <h5>设置常量</h5>
+                    <p>
+                        <code>batch_size</code>用于表示每训练多少次进行一次优化更新，
+                        <code>epoch</code>表示多少<code>batch_size</code>后刷新显示状态
+                    </p>
+                    <pre class="line-numbers language-javascript"><code>
+                    const batch_size = 32, epoch = 5;
+                </code></pre>
+                </section>
+                <br>
+                <section>
+                    <h5>创建神经网络</h5>
+                    <p>
+                        下面的寥寥几行代码就创建了一个3隐藏层的神经网络，这比用numpy/matlab之类的方便的多
+                        <a href="http://neuralnetworksanddeeplearning.com/">这是一个非常基础的教程，如果你对神经网络一无所知</a>
+                        <code>lrelu</code> <code>elu</code> <code>sigmoid</code> 是三种不同的激活函数，这里这样用只是为了秀特技。
+                        <br> 源代码<code>layer/activation.js</code> 下面有所有的激活函数
+                        <br> 另外 <code>fc</code> 是全连接层
+                    </p>
+                    <pre class="line-numbers language-javascript"><code>
+                    var net = new Sequential([
+                        { type: 'input', shape: [1] },
+                        { type: 'fc', num_neurons: 20 },
+                        'lrelu',
+                        { type: 'fc', num_neurons: 20 },
+                        'elu',
+                        { type: 'fc', num_neurons: 20 },
+                        'sigmoid',
+                        { type: 'fc', num_neurons: 1 }
+                    ]);
+                </code></pre>
+                </section>
+
+                <section>
+                    <h5>获得神经网络的函数闭包</h5>
+                    <p>
+                        一行代码就可以把这个神经网络变成 <code>number → number</code> 的函数。其中用到了ECMAScript6的箭头函数
+                        <br> 注意到神经网络接收的都是<code>Tensor</code>，我们需要在数字和张量之间做一个类型转换。
+                    </p>
+                    <pre class="line-numbers language-javascript"><code>
+                    var net_f = x => net.forward(Tensor.fromNumber(x)).toNumber();
+                </code></pre>
+                </section>
+
+                <section>
+                    <h5>为神经网络创建一个训练器</h5>
+                    <p>
+                        同样几行就可以了
+                    </p>
+                    <pre class="line-numbers language-javascript">
+                <code>
+                var trainer = new Trainer(net, {
+                        learning_rate: 0.001, // 学习率
+                        lr_decay: 0,          // 学习率不会下降
+                        method: 'adam',       // 使用 adam 优化器
+                        loss: 'mse',          // 使用均方损失函数
+                        batch_size: batch_size, // mini-batch 大小
+                        l2_decay: 0.001     // L2-regularization
+                });
+                </code></pre>
+                </section>
+
+                <section>
+                    <h5>声明两个变量，用于存放等待拟合的函数以及用于训练的数据</h5>
+                    <p>
+                        <code>targetf</code> 是等待拟合的函数，<code>batch</code>是管理用于训练的数据
+                    </p>
+                    <pre class="line-numbers language-javascript">
+                <code>
+                var targetf, batch;
+                </code></pre>
+                </section>
+
+
+                <section>
+                    <h5>生成所需函数</h5>
+                    <p>
+                        这里看上去代码稍多，但是完全取决于用户如何定义函数。这里使用三角函数系。<br>
+                        <code>vari</code> 决定了生成函数的频谱宽度，对应于复杂度
+                        <br> 生成的函数保存在 <code>targetf</code>
+                    </p>
+                    <pre class="line-numbers language-javascript">
+                <code>
+                function gen_func(vari = 1) {
+                    let A = [],
+                        phi = [],
+                        k = [];
+                    for (let i = 0; i < vari; i++) {
+                        A.push(randf(-1, 1));
+                        phi.push(randf(-2, 2));
+                        k.push(randf(-vari, vari));
+                    }
+                    targetf = function(x) {
+                        let r = 0;
+                        for (let i = 0; i < vari; i++) r += A[i] * Math.sin(k[i] * x + phi[i]);
+                        return r;
+                    };
+                }
+                </code></pre>
+                </section>
+
+                <section>
+                    <h5>得到数据点，生成batch，并绘制</h5>
+                    <p>
+                        这段代码从 <code>targetf</code> 采样数据点
+                        <br> '<code>...</code>' 是解包操作，它把数组变成函数的参数列表
+                        <br> <code>zip</code>和<code>map</code>都是常用的高阶函数，搞声明式编程的人应该再熟悉不过了
+                    </p>
+                    <pre class="line-numbers language-javascript">
+                <code>
+                function gen_data(N) {
+                    var pairs = sampleFunctionUniform(targetf, N, -5, 5);
+                    gen_batch(...pairs);
+                    var points = zip(pairs).map(([x, y]) => ({ x: x, y: y }));
+                    regressionPlot.accurate = Math.max(100, N * 2);
+                    plot.drawPoints(points);
+                }
+                </code></pre>
+                </section>
+
+
+                <section>
+                    <h5>生成batch</h5>
+                    <p>
+                        这里的一个细节是，<code>data</code> 和 <code>labels</code> 都是所谓 Typed-Array，对它们进行map要求返回数值，否则会产生 <code>NaN</code>
+                        <br> 所以我们先用<code>Array.from</code>将它们转为一般的<code>Array</code>然后再用map转为<code>Tensor</code>
+                        <br> 生成的 <code>Batch</code> 保存在 <code>batch</code>
+                    </p>
+                    <pre class="line-numbers language-javascript">
+                <code>
+                function gen_batch(data, labels) {
+                    // preprocess data
+                    data = Array.from(data).map(Tensor.fromNumber);
+                    labels = Array.from(labels).map(Tensor.fromNumber);
+                    batch = new Batch(data, labels, batch_size);
+                }
+                </code></pre>
+                </section>
+
+
+
+                <section>
+                    <h5>重新加载</h5>
+                    <p>
+                        初始化上面的东西。<code>|0</code> 的作用是把类型转为整数
+                    </p>
+                    <pre class="line-numbers language-javascript">
+                <code>
+                function reload() {
+                    gen_func(complexity.value | 0);
+                    gen_data(traindata_size.value | 0);
+                    gen_net();
+                }
+                </code></pre>
+                </section>
+
+                <section>
+                    <h5>选择要填充数据的元素</h5>
+                    <p>
+                        使用了d3js
+                    </p>
+                    <pre class="line-numbers language-javascript">
+                <code>
+                var avlosstext = d3.select('#avloss'),
+                    avtimetext = d3.select('#avtime'),
+                    iterstext = d3.select('#iters');
+                </code></pre>
+                </section>
+
+
+                <section>
+                    <h5>创建滑动平均窗口用来统计数据</h5>
+                    <pre class="line-numbers language-javascript">
+                <code>
+                var loss_record = new AvgWindow(batch_size * epoch, 1);
+                var time_record = new AvgWindow(batch_size * epoch * 10, 1);
+                </code></pre>
+                </section>
+
+                <section>
+                    <h5>训练和更新</h5>
+                    <p>
+                        训练，记录结果，更新内容
+                    </p>
+                    <pre class="line-numbers language-javascript">
+                <code>
+                /* train */
+                var steps = 0;
+
+                function update() {
+                    ++steps;
+                    // train
+                    for (let iters = 0; iters < epoch; iters++) {
+                        let stats = trainer.trainBatch(...batch.nextBatch());
+                        loss_record.push(stats.loss);
+                        time_record.push(stats.batch_time);
+                    }
+                    // update record
+                    if (steps % 5 == 0) {
+                        iterstext.text(`${steps}`);
+                        avlosstext.text(`${loss_record.average.toExponential(3)}`);
+                        avtimetext.text(`${(time_record.average * epoch).toFixed(3)} ms`);
+                    }
+                    // redraw network as an function
+                    regressionPlot.draw(net_f);
+                }
+                </code></pre>
+                </section>
+
+                <section>
+                    <h5>迭代控制</h5>
+                    <p>
+                        执行更新操作。 使用<code>window.requestAnimationFrame</code> 自动寻求时机，而不是<code>setTimeout</code>
+                    </p>
+                    <pre class="line-numbers language-javascript">
+                <code>
+                /* running control */
+
+                var conti = true;
+
+                function iterate() {
+                    update();
+                    if (!conti) return;
+                    window.requestAnimationFrame(iterate);
+                }
+                </code></pre>
+                </section>
+
+
+                <h4>Part II 绘图</h4>
+                <section>
+                    <h5>创建矢量图</h5>
+                    <p>
+                        这是 <code>d3js</code> 库的方法。我们创立一个高逼格的SVG矢量图，它可以任意放大而不失去清晰度
+                    </p>
+                    <pre class="line-numbers language-javascript">
+                <code>
+                var svg = d3.select('#testbox')
+                .append('svg')
+                .attr('width', '800')
+                .attr('height', '400');
+                </code></pre>
+                </section>
+                <section>
+                    <h5>创建函数绘制对象</h5>
+                    <p>
+                        先在SVG上创立一个绘制平面函数的对象 <code>plot</code>。然后我们创建两个曲线（参数是曲线绘制的“精确度”）。
+                    </p>
+                    <pre class="line-numbers language-javascript">
+                <code>
+                var plot = new Plot1D(svg, [-5, 5]);
+                var groundTruthPlot = plot.createPlot(450),
+                    regressionPlot = plot.createPlot(100);
+                </code></pre>
+                </section>
+
+                <section>
+                    <h5>绘制背景函数</h5>
+                    <p>
+                        <code>targetf </code> 是某个函数
+                        <code> setSpan </code> 将使得SVG自动适应要绘制的函数，并且期望尺寸为 800*400。使用<code> draw </code>方法就可以直接绘制函数。
+                    </p>
+                    <pre class="line-numbers language-javascript">
+                <code>
+                // set drawing boundary by targetf
+                plot.setSpan(targetf, 800, 400);
+                // Plot groundTruth
+                groundTruthPlot.draw(targetf);
+                </code></pre>
+                </section>
+
+            </article>
+        </div>
+    </div>
+    <script>
+        Prism.plugins.NormalizeWhitespace.setDefaults({
+            'remove-trailing': true,
+            'remove-indent': true,
+            'left-trim': true,
+            'right-trim': true,
+            /*'break-lines': 80,
+            'indent': 2,
+            'remove-initial-line-feed': false,
+            'tabs-to-spaces': 4,
+            'spaces-to-tabs': 4*/
+        });
+    </script>
+</body>
+
+</html>
