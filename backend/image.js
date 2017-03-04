@@ -1,7 +1,7 @@
 import { Tensor } from 'backend/tensor.js';
 import { assert } from 'util/assert.js';
-import { clip_pixel, scale_shift } from 'backend/ops.js';
-
+import { clip_pixel } from 'backend/ops.js';
+import { prod } from 'util/array.js';
 /**
  * This class provides a more uniform and general way to store and save images with same shape
  */
@@ -21,7 +21,7 @@ class ImageBuffer {
         for (let i of tsArray) {
             let x = i.clone();
             clip_pixel(x);
-            let ba = new Uint8ClampedArray(size); 
+            let ba = new Uint8ClampedArray(size);
             for (let j = 0; j < size; j++) {
                 ba[j] = x.w[j];
             }
@@ -30,15 +30,14 @@ class ImageBuffer {
         return ib;
     }
 
-    get tensors() {
-        return this.images.map(b => {
-            let t = new Tensor(this.shape);
-            let N = t.size;
-            for (let i = 0; i < N; i++) {
-                t.w[i] = (b[i] / 255.0) * 2.0 - 1.0;
-            }
-            return t;
-        });
+    get tensor() {
+        let image = this.images;
+        let t = new Tensor(this.shape);
+        let N = t.size;
+        for (let i = 0; i < N; i++) {
+            t.w[i] = (image[i] / 255.0) * 2.0 - 1.0;
+        }
+        return t;
     }
 
     /**
@@ -50,20 +49,17 @@ class ImageBuffer {
     static load(map, buf) {
         let ib = new ImageBuffer();
         ib.name = map.name;
+        assert(map.shape.length === 4, "Error: images should be tensor with 4 dims")
         ib.shape = map.shape;
-        ib.images = [];
-
-        let size = ib.shape[0] * ib.shape[1] * ib.shape[2];  // FIXME: may a more general way?
+        let size = prod(ib.shape);
         // OK, load values from buffer
-        for (let i = 0; i < map.count; i++) {
-            ib.images.push(buf.read(size, 'Uint8ClampedArray'));
-        }
+        ib.images = buf.read(size, 'Uint8ClampedArray');
         return ib;
     }
 
     __save__(buf) {
         for (let i of this.images) buf.write(i);
-        return {name: this.name, shape: this.shape, count: this.images.length, type: 'images'};
+        return { name: this.name, shape: this.shape, count: this.images.length, type: 'images' };
     }
 }
 

@@ -1,21 +1,27 @@
-# Modern ConvNetJS
+# InspireNN
 
-It is a project trying to reimplement [ConvNetJS](https://github.com/karpathy/convnetjs) with modern styles (ECMAScript6, functional programming), making it's code shorter, more readable for beginners and easier to extend.
+This project makes neural networks running on browsers. It can be useful in blogging & presentation.
+
+
+It reimplements [ConvNetJS](https://github.com/karpathy/convnetjs) with modern styles (ECMAScript6, functional programming), making it's code shorter, more readable for beginners and easier to extend.
 
 It's sure that we should never expect a neural network training in the browser doing a big deal, but it's useful for presentation and understanding.
 
 It is still under developing. 
 
-Following is a short introduction to ConvNetJS itself:
 
-ConvNetJS is a Javascript implementation of Neural networks, together with nice browser-based demos. It currently supports:
+## Dependency
 
-- Common **Neural Network modules** (fully connected layers, non-linearities)
-- Classification (SVM/Softmax) and Regression (L2) **cost functions**
-- Ability to specify and train **Convolutional Networks** that process images
-- An experimental **Reinforcement Learning** module, based on Deep Q Learning
+* transpiler
 
-For much more information, see the main page at [convnetjs.com](http://convnetjs.com)
+  `systemjs` + `traceur` is used to load ES6 modules and provide ES6 polyfill for older browsers.
+
+* style
+
+  `jquery`, `materializecss`, `d3js` and `three.js` is included in the project for supporting visualization tasks. Though making use of CDNs may be a better idea, but I prefer to keep them local for offline situations.
+
+
+
 
 ## License
 MIT

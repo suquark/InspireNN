@@ -2,3 +2,5 @@ test/
 tags
 
 .vscode/launch.json
+
+dataset/mnist.raw

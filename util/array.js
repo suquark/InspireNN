@@ -206,7 +206,7 @@ function sum(arr) {
 
 // create array
 export { zeros, zeros2d, array2d, one_hot };
-export { prod };
+export { prod, sum };
 // property of array
 export { maxmin, indexOfMax, arrUnique, arrContains };
 // geometry

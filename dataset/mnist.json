@@ -1,0 +1,1 @@
+[{"name":"mnist/","nodes":[{"name":"x","shape":[70000,28,28,1],"type":"images"},{"type":"Uint8Array","name":"y","length":70000}]}]
