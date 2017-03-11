@@ -20,7 +20,17 @@ It is still under developing.
 
   `jquery`, `materializecss`, `d3js` and `three.js` is included in the project for supporting visualization tasks. Though making use of CDNs may be a better idea, but I prefer to keep them local for offline situations.
 
+## Demo
 
+You may start a http server at root of the project and try some of the demos under `demo/` in your browser.
+
+We will soon provide you with online demos.
+
+### Regression
+
+`demo/regression/` is a demo about regression.
+
+![demo/regression/]()
 
 
 ## License

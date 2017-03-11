@@ -9,17 +9,16 @@
     <script src="../../transpiler/system.js"></script>
     <script src="../sysconf.js"></script>
 
-    <script src="../../visualize/foreign/jquery.min.js"></script>
+    <script src="../../foreign/jquery.min.js"></script>
+    <script src="../../foreign/d3.min.js"></script>
+    <script src="../../foreign/d3-interpolate-path.js"></script>
 
-    <link rel="stylesheet" href="../../visualize/materialize/css/materialize.min.css" />
-    <link rel="stylesheet" href="../../visualize/materialize/css/material_icons.css" />
-    <script src="../../visualize/foreign/materialize/js/materialize.min.js"></script>
+    <script src="../../foreign/materialize/js/materialize.min.js"></script>
+    <link rel="stylesheet" href="../../foreign/materialize/css/materialize.min.css" />
+    <link rel="stylesheet" href="../../foreign/materialize/css/material_icons.css" />
+
 
     <script src="../../visualize/preload-mask.js"></script>
-
-    <script src="../../visualize/foreign/d3.min.js"></script>
-    <script src="../../visualize/foreign/d3-interpolate-path.js"></script>
-
     <style>
         path {
             stroke: #0bb;
@@ -61,9 +60,11 @@
 
             <h1>Regression Demo</h1>
             <p style="font-style: italic;">Last modified at 2017-02-25</p>
-            <iframe src="https://ghbtns.com/github-btn.html?user=suquark&repo=ConvNetJS6&type=star&count=true&size=large" frameborder="0" scrolling="0" width="160px" height="30px"></iframe>
+            <iframe src="https://ghbtns.com/github-btn.html?user=suquark&repo=InspireNN&type=star&count=true&size=large" frameborder="0" scrolling="0" width="160px" height="30px"></iframe>
             <blockquote>
-                This is a regression where a neural network tried to match the given data points<br> The ground truth curve is also given<br>
+                This is a regression where a neural network tried to match the given data points
+                <br> The ground truth curve is also given<br>
+                <a href="doc.html">This is the document about the demo</a>
             </blockquote>
 
             <div id="testbox" class="col s12"></div>
