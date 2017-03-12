@@ -47,8 +47,10 @@ class LinearLayer extends Layer {
         this.dy = dy;
         let x = this.in_act;
         if (this.b) radd(this.db, dy);
-        tdotadd(this.dW, x, dy);
-        this.dx += this.W * transpose(dy);
+        matmulT2(this.batch_dW, x, dy);
+        mean(this.dW, this.batch_dW);
+        ///// TODO:  
+        matmulT2(this.dx, this.W, dy);
     }
 
     get trainables() {

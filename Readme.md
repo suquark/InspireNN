@@ -30,7 +30,7 @@ We will soon provide you with online demos.
 
 `demo/regression/` is a demo about regression.
 
-![demo/regression/]()
+![](demo/regression/snapshot.png)
 
 
 ## License
