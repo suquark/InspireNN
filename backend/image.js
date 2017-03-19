@@ -6,7 +6,9 @@ import { prod } from 'util/array.js';
  * This class provides a more uniform and general way to store and save images with same shape
  */
 class ImageBuffer {
-    constructor() {}
+    constructor() {
+        this._tensor = undefined;
+    }
 
     /**
      * @param { Array } tsArray - Array of Tensor
@@ -31,14 +33,23 @@ class ImageBuffer {
     }
 
     get tensor() {
-        let image = this.images;
-        let t = new Tensor(this.shape);
-        let N = t.size;
-        for (let i = 0; i < N; i++) {
-            t.w[i] = (image[i] / 255.0) * 2.0 - 1.0;
+        if (!this._tensor) {
+            let image = this.images;
+            let t = new Tensor(this.shape);
+            let N = t.size;
+            for (let i = 0; i < N; i++) {
+                t.w[i] = (image[i] / 255.0) * 2.0 - 1.0;
+            }
+            this._tensor = t;
         }
-        return t;
+        return this._tensor;
     }
+
+    get tensors() {
+
+    }
+
+
 
     /**
      * Load images from buffer

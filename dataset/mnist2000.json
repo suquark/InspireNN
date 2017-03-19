@@ -1,1 +1,1 @@
-[{"name":"mnist/","nodes":[{"name":"x","shape":[28,28,1],"count":2000,"type":"images"},{"type":"Int32Array","name":"y","length":2000}]}]
+[{ "name": "mnist/", "nodes": [{ "name": "x", "shape": [2000, 28, 28, 1], "type": "images" }, { "type": "Int32Array", "name": "y", "length": 2000 }] }]
